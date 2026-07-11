@@ -314,6 +314,15 @@ const presenter = Array.isArray(currentProgram.presenters)
 
     if (!playBtn) return;
 
+    const STATE_KEY = 'esmeralda-playing';
+
+    function saveState(playing) {
+      try { localStorage.setItem(STATE_KEY, playing ? '1' : '0'); } catch {}
+    }
+    function loadState() {
+      try { return localStorage.getItem(STATE_KEY) === '1'; } catch { return false; }
+    }
+
     let audio = null;
     let isPlaying = false;
     let isBuffering = false;
@@ -358,12 +367,14 @@ const presenter = Array.isArray(currentProgram.presenters)
     function onPlaying() {
       isPlaying = true;
       retryCount = 0;
+      saveState(true);
       updatePlayButton();
       startMetadataPolling();
     }
 
     function onPause() {
       isPlaying = false;
+      saveState(false);
       updatePlayButton();
       stopMetadataPolling();
     }
@@ -543,14 +554,25 @@ const presenter = Array.isArray(currentProgram.presenters)
       }
     });
 
-    // Cleanup on unload
+    // Salva estado ao sair (nao pausa — pra retomar na proxima visita)
     window.addEventListener('beforeunload', () => {
       stopMetadataPolling();
-      if (audio) {
-        audio.pause();
-        audio.src = '';
-      }
+      saveState(isPlaying);
     });
+
+    // ===== Autoplay na carga da pagina se estava tocando antes =====
+    if (loadState()) {
+      // Pequeno delay pra garantir que o DOM e o SW estao prontos
+      setTimeout(() => {
+        initAudio();
+        setBuffering(true);
+        audio.play().catch((e) => {
+          // Autoplay bloqueado pelo navegador — aguarda clique do usuario
+          console.log('[PlayerBar] Autoplay blocked:', e.message);
+          setBuffering(false);
+        });
+      }, 300);
+    }
 
     // Initialize schedule-based now-playing (fallback)
     function updateScheduleNowPlaying() {
