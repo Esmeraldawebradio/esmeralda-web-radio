@@ -26,233 +26,583 @@ const STATE = "DF";
   const root = document.getElementById('weather-root');
   if (!root) return;
 
-  const CITY = WEATHER_CITY;
-  const STATE = WEATHER_STATE;
-  const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-  const MONTHS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+  const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
-  const WMO_MAP = {
-    0: { i: 'sun', l: 'Céu limpo', g: 'linear-gradient(135deg, #f5af19, #f12711)' },
-    1: { i: 'sun', l: 'Predomínio de sol', g: 'linear-gradient(135deg, #f5af19, #f12711)' },
-    2: { i: 'cloud-sun', l: 'Parcialmente nublado', g: 'linear-gradient(135deg, #89cff0, #f5af19)' },
-    3: { i: 'cloud', l: 'Nublado', g: 'linear-gradient(135deg, #6b7b8d, #c0c8d0)' },
-    45: { i: 'fog', l: 'Nevoeiro', g: 'linear-gradient(135deg, #8e9eab, #eef2f3)' },
-    48: { i: 'fog', l: 'Nevoeiro', g: 'linear-gradient(135deg, #8e9eab, #eef2f3)' },
-    51: { i: 'drizzle', l: 'Chuva leve', g: 'linear-gradient(135deg, #4b6cb7, #6b93d6)' },
-    53: { i: 'drizzle', l: 'Chuva moderada', g: 'linear-gradient(135deg, #3a5a9f, #5a7fc0)' },
-    55: { i: 'rain', l: 'Chuva forte', g: 'linear-gradient(135deg, #2a4a8f, #4a6fb0)' },
-    61: { i: 'rain', l: 'Chuva', g: 'linear-gradient(135deg, #2a4a8f, #4a6fb0)' },
-    63: { i: 'rain', l: 'Chuva moderada', g: 'linear-gradient(135deg, #1a3a7f, #3a5fa0)' },
-    65: { i: 'rain-heavy', l: 'Chuva forte', g: 'linear-gradient(135deg, #0a2a6f, #2a4f90)' },
-    71: { i: 'snow', l: 'Neve', g: 'linear-gradient(135deg, #b8c6db, #f5f7fa)' },
-    80: { i: 'rain', l: 'Pancadas de chuva', g: 'linear-gradient(135deg, #2a4a8f, #6b93d6)' },
-    95: { i: 'storm', l: 'Tempestade', g: 'linear-gradient(135deg, #141e30, #243b55)' },
+  // ===== WMO Weather Codes =====
+  const weatherConditions = {
+    0:  { icon: 'sun',        label: 'Céu limpo',          gradient: 'linear-gradient(135deg, #f5af19, #f12711)' },
+    1:  { icon: 'sun',        label: 'Predomínio de sol',  gradient: 'linear-gradient(135deg, #f5af19, #f12711)' },
+    2:  { icon: 'cloud-sun',  label: 'Parcialmente nublado',gradient: 'linear-gradient(135deg, #89cff0, #f5af19)' },
+    3:  { icon: 'cloud',      label: 'Nublado',            gradient: 'linear-gradient(135deg, #6b7b8d, #c0c8d0)' },
+    45: { icon: 'fog',        label: 'Nevoeiro',           gradient: 'linear-gradient(135deg, #8e9eab, #eef2f3)' },
+    48: { icon: 'fog',        label: 'Nevoeiro',           gradient: 'linear-gradient(135deg, #8e9eab, #eef2f3)' },
+    51: { icon: 'drizzle',    label: 'Chuva leve',         gradient: 'linear-gradient(135deg, #4b6cb7, #6b93d6)' },
+    53: { icon: 'drizzle',    label: 'Chuva moderada',     gradient: 'linear-gradient(135deg, #3a5a9f, #5a7fc0)' },
+    55: { icon: 'rain',       label: 'Chuva forte',        gradient: 'linear-gradient(135deg, #2a4a8f, #4a6fb0)' },
+    61: { icon: 'rain',       label: 'Chuva',              gradient: 'linear-gradient(135deg, #2a4a8f, #4a6fb0)' },
+    63: { icon: 'rain',       label: 'Chuva moderada',     gradient: 'linear-gradient(135deg, #1a3a7f, #3a5fa0)' },
+    65: { icon: 'rain-heavy', label: 'Chuva forte',        gradient: 'linear-gradient(135deg, #0a2a6f, #2a4f90)' },
+    71: { icon: 'snow',       label: 'Neve',               gradient: 'linear-gradient(135deg, #b8c6db, #f5f7fa)' },
+    80: { icon: 'rain',       label: 'Pancadas de chuva',  gradient: 'linear-gradient(135deg, #2a4a8f, #6b93d6)' },
+    95: { icon: 'storm',      label: 'Tempestade',         gradient: 'linear-gradient(135deg, #141e30, #243b55)' },
   };
 
-  function wmo(code) { return WMO_MAP[code] || WMO_MAP[0]; }
+  function getWeather(code) {
+    return weatherConditions[code] || weatherConditions[0];
+  }
 
-  function iconHTML(type) {
-    const S = {
-      sun: '<circle cx="32" cy="32" r="14" fill="#FFD700" stroke="#FFA500" stroke-width="2"/><g stroke="#FFD700" stroke-width="3" stroke-linecap="round"><line x1="32" y1="4" x2="32" y2="12"/><line x1="32" y1="52" x2="32" y2="60"/><line x1="60" y1="32" x2="52" y2="32"/><line x1="12" y1="32" x2="4" y2="32"/><line x1="48.5" y1="15.5" x2="42.5" y2="21.5"/><line x1="21.5" y1="42.5" x2="15.5" y2="48.5"/><line x1="48.5" y1="48.5" x2="42.5" y2="42.5"/><line x1="21.5" y1="21.5" x2="15.5" y2="15.5"/></g>',
-      'cloud-sun': '<circle cx="26" cy="24" r="9" fill="#FFD700" stroke="#FFA500" stroke-width="2"/><path d="M16 44h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#E0E8F0" stroke="#B0C0D0" stroke-width="2"/>',
-      cloud: '<path d="M14 44h36a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#D0D8E0" stroke="#A0B0C0" stroke-width="2"/>',
-      fog: '<g stroke="#B0C0D0" stroke-width="3" stroke-linecap="round"><line x1="12" y1="24" x2="52" y2="24"/><line x1="16" y1="32" x2="48" y2="32"/><line x1="12" y1="40" x2="52" y2="40"/></g>',
-      drizzle: '<path d="M16 36h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#C0D0E0" stroke="#90A8C0" stroke-width="2"/><g stroke="#4A8AFF" stroke-width="2" stroke-linecap="round"><line x1="22" y1="42" x2="20" y2="48"/><line x1="32" y1="42" x2="30" y2="48"/><line x1="42" y1="42" x2="40" y2="48"/></g>',
-      rain: '<path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#A0B8D0" stroke="#7090B0" stroke-width="2"/><g stroke="#4A7AFF" stroke-width="2" stroke-linecap="round"><line x1="20" y1="40" x2="16" y2="50"/><line x1="30" y1="40" x2="26" y2="50"/><line x1="40" y1="40" x2="36" y2="50"/><line x1="50" y1="40" x2="46" y2="50"/></g>',
-      'rain-heavy': '<path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#8098B0" stroke="#507090" stroke-width="2"/><g stroke="#3A6AEF" stroke-width="3" stroke-linecap="round"><line x1="20" y1="40" x2="14" y2="52"/><line x1="30" y1="40" x2="24" y2="52"/><line x1="40" y1="40" x2="34" y2="52"/><line x1="50" y1="40" x2="44" y2="52"/></g>',
-      snow: '<path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#E8EEF4" stroke="#C0D0E0" stroke-width="2"/><g fill="#B0C8E0"><circle cx="20" cy="42" r="2"/><circle cx="30" cy="48" r="2"/><circle cx="40" cy="42" r="2"/><circle cx="50" cy="48" r="2"/></g>',
-      storm: '<path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#506080" stroke="#304060" stroke-width="2"/><g stroke="#FFD700" stroke-width="2"><polyline points="34,36 28,44 36,44 28,52" fill="#FFD700"/></g>',
+  // ===== SVG Icons =====
+  function renderWeatherIcon(iconName) {
+    const icons = {
+      sun: `
+        <circle cx="32" cy="32" r="14" fill="#FFD700" stroke="#FFA500" stroke-width="2"/>
+        <g stroke="#FFD700" stroke-width="3" stroke-linecap="round">
+          <line x1="32" y1="4" x2="32" y2="12"/>
+          <line x1="32" y1="52" x2="32" y2="60"/>
+          <line x1="60" y1="32" x2="52" y2="32"/>
+          <line x1="12" y1="32" x2="4" y2="32"/>
+          <line x1="48.5" y1="15.5" x2="42.5" y2="21.5"/>
+          <line x1="21.5" y1="42.5" x2="15.5" y2="48.5"/>
+          <line x1="48.5" y1="48.5" x2="42.5" y2="42.5"/>
+          <line x1="21.5" y1="21.5" x2="15.5" y2="15.5"/>
+        </g>`,
+
+      'cloud-sun': `
+        <circle cx="26" cy="24" r="9" fill="#FFD700" stroke="#FFA500" stroke-width="2"/>
+        <path d="M16 44h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z"
+          fill="#E0E8F0" stroke="#B0C0D0" stroke-width="2"/>`,
+
+      cloud: `
+        <path d="M14 44h36a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z"
+          fill="#D0D8E0" stroke="#A0B0C0" stroke-width="2"/>`,
+
+      fog: `
+        <g stroke="#B0C0D0" stroke-width="3" stroke-linecap="round">
+          <line x1="12" y1="24" x2="52" y2="24"/>
+          <line x1="16" y1="32" x2="48" y2="32"/>
+          <line x1="12" y1="40" x2="52" y2="40"/>
+        </g>`,
+
+      drizzle: `
+        <path d="M16 36h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z"
+          fill="#C0D0E0" stroke="#90A8C0" stroke-width="2"/>
+        <g stroke="#4A8AFF" stroke-width="2" stroke-linecap="round">
+          <line x1="22" y1="42" x2="20" y2="48"/>
+          <line x1="32" y1="42" x2="30" y2="48"/>
+          <line x1="42" y1="42" x2="40" y2="48"/>
+        </g>`,
+
+      rain: `
+        <path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z"
+          fill="#A0B8D0" stroke="#7090B0" stroke-width="2"/>
+        <g stroke="#4A7AFF" stroke-width="2" stroke-linecap="round">
+          <line x1="20" y1="40" x2="16" y2="50"/>
+          <line x1="30" y1="40" x2="26" y2="50"/>
+          <line x1="40" y1="40" x2="36" y2="50"/>
+          <line x1="50" y1="40" x2="46" y2="50"/>
+        </g>`,
+
+      'rain-heavy': `
+        <path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z"
+          fill="#8098B0" stroke="#507090" stroke-width="2"/>
+        <g stroke="#3A6AEF" stroke-width="3" stroke-linecap="round">
+          <line x1="20" y1="40" x2="14" y2="52"/>
+          <line x1="30" y1="40" x2="24" y2="52"/>
+          <line x1="40" y1="40" x2="34" y2="52"/>
+          <line x1="50" y1="40" x2="44" y2="52"/>
+        </g>`,
+
+      snow: `
+        <path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z"
+          fill="#E8EEF4" stroke="#C0D0E0" stroke-width="2"/>
+        <g fill="#B0C8E0">
+          <circle cx="20" cy="42" r="2"/>
+          <circle cx="30" cy="48" r="2"/>
+          <circle cx="40" cy="42" r="2"/>
+          <circle cx="50" cy="48" r="2"/>
+        </g>`,
+
+      storm: `
+        <path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z"
+          fill="#506080" stroke="#304060" stroke-width="2"/>
+        <g stroke="#FFD700" stroke-width="2">
+          <polyline points="34,36 28,44 36,44 28,52" fill="#FFD700"/>
+        </g>`,
     };
-    return `<svg viewBox="0 0 64 64" fill="none" class="wi">${S[type]||S.sun}</svg>`;
+
+    const content = icons[iconName] || icons.sun;
+    return `<svg viewBox="0 0 64 64" fill="none" class="weather-svg-icon">${content}</svg>`;
   }
 
-  function windDir(deg) {
-    const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
-    return dirs[Math.round(deg / 22.5) % 16];
+  // ===== Utilitários =====
+  function getWindDirection(degrees) {
+    const directions = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+    return directions[Math.round(degrees / 22.5) % 16];
   }
 
-  async function load() {
+  function getUVLabel(index) {
+    if (index >= 8) return 'Extremo';
+    if (index >= 6) return 'Alto';
+    if (index >= 3) return 'Moderado';
+    return 'Baixo';
+  }
+
+  function getDayName(dateString) {
+    return days[new Date(dateString).getDay()];
+  }
+
+  function formatDate(dateString) {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = months[date.getMonth()];
+    return `${day} ${month}`;
+  }
+
+  // ===== Construção do HTML =====
+  function buildCurrentWeather(current, today) {
+    const weather = getWeather(current.weathercode);
+    return `
+      <div class="weather-current-section" style="--weather-gradient: ${weather.gradient}">
+        <div class="weather-current-section__overlay"></div>
+
+        <div class="weather-current-main">
+          <div class="weather-current-icon-wrapper">
+            ${renderWeatherIcon(weather.icon)}
+          </div>
+          <div class="weather-current-info">
+            <div class="weather-current-temperature">${current.temperature_2m}°C</div>
+            <div class="weather-current-feels-like">Sensação ${current.apparent_temperature}°C</div>
+            <div class="weather-current-condition">${weather.label}</div>
+            <div class="weather-current-location">${CITY}, ${STATE}</div>
+          </div>
+        </div>
+
+        <div class="weather-current-details">
+          <div class="weather-detail">
+            <span class="weather-detail__label">Umidade</span>
+            <span class="weather-detail__value">${current.relative_humidity_2m}%</span>
+          </div>
+          <div class="weather-detail">
+            <span class="weather-detail__label">Vento</span>
+            <span class="weather-detail__value">${current.wind_speed_10m} <small>km/h</small></span>
+            <span class="weather-detail__sub">${getWindDirection(current.wind_direction_10m)}</span>
+          </div>
+          <div class="weather-detail">
+            <span class="weather-detail__label">UV</span>
+            <span class="weather-detail__value">${current.uv_index}</span>
+            <span class="weather-detail__sub">${getUVLabel(current.uv_index)}</span>
+          </div>
+          <div class="weather-detail">
+            <span class="weather-detail__label">Máx / Mín</span>
+            <span class="weather-detail__value">${today.maxTemp}° / ${today.minTemp}°</span>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function buildHourlyForecast(hourlyData) {
+    if (!hourlyData.length) return '';
+    return `
+      <div class="weather-hourly-section">
+        ${hourlyData.map(h => {
+          const weather = getWeather(h.code);
+          return `
+            <div class="weather-hourly-item">
+              <span class="weather-hourly-item__time">${h.time}</span>
+              ${renderWeatherIcon(weather.icon)}
+              <span class="weather-hourly-item__temp">${h.temperature}°</span>
+              <span class="weather-hourly-item__rain">${h.rainChance}%</span>
+            </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  function buildDailyForecast(forecastData) {
+    return `
+      <div class="weather-daily-grid">
+        ${forecastData.map((day, index) => {
+          const weather = getWeather(day.code);
+          const isToday = index === 0;
+          return `
+            <div class="weather-daily-card ${isToday ? 'weather-daily-card--today' : ''}">
+              <span class="weather-daily-card__name">${isToday ? 'Hoje' : day.dayName}</span>
+              <span class="weather-daily-card__date">${day.date}</span>
+              <div class="weather-daily-card__icon">${renderWeatherIcon(weather.icon)}</div>
+              <span class="weather-daily-card__condition">${weather.label}</span>
+              <div class="weather-daily-card__temps">
+                <span class="weather-daily-card__temp-max">${day.maxTemp}°</span>
+                <span class="weather-daily-card__temp-sep">/</span>
+                <span class="weather-daily-card__temp-min">${day.minTemp}°</span>
+              </div>
+              <div class="weather-daily-card__extras">
+                <span class="weather-daily-card__rain ${day.rainChance > 0 ? 'weather-daily-card__rain--active' : ''}">
+                  <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                    <path d="M4 6a4 4 0 1 1 8 0c0 2.5-2 5-4 7-2-2-4-4.5-4-7z"/>
+                  </svg>
+                  ${day.rainChance}%
+                </span>
+                <span class="weather-daily-card__wind">
+                  <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
+                    <path d="M1 8h11.5a2.5 2.5 0 0 0 0-5h-.5m-4 10h5.5a2.5 2.5 0 0 0 0-5H13"/>
+                  </svg>
+                  ${day.windSpeed} ${day.windDirection}
+                </span>
+              </div>
+            </div>`;
+        }).join('')}
+      </div>`;
+  }
+
+  // ===== Carregamento dos dados =====
+  async function loadWeatherData() {
     try {
-      const res = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}` +
-        `&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode,wind_speed_10m_max,wind_direction_10m_dominant` +
-        `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weathercode,wind_speed_10m,wind_direction_10m,uv_index` +
-        `&hourly=temperature_2m,precipitation_probability,weathercode` +
-        `&timezone=America/Sao_Paulo&forecast_days=8&wind_speed_unit=kmh`
-      );
-      if (!res.ok) throw new Error('API error');
-      const d = await res.json();
-      const daily = d.daily;
-      const cur = d.current;
-      const hData = d.hourly;
+      const url = 'https://api.open-meteo.com/v1/forecast'
+        + `?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}`
+        + '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode,wind_speed_10m_max,wind_direction_10m_dominant'
+        + '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weathercode,wind_speed_10m,wind_direction_10m,uv_index'
+        + '&hourly=temperature_2m,precipitation_probability,weathercode'
+        + '&timezone=America/Sao_Paulo&forecast_days=8&wind_speed_unit=kmh';
 
-      const curW = wmo(cur.weathercode);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Falha ao carregar dados meteorológicos');
 
-      function dayName(i) {
-        const dt = new Date(daily.time[i]);
-        return DAYS[dt.getDay()];
-      }
+      const data = await response.json();
+      const daily = data.daily;
+      const current = data.current;
+      const hourly = data.hourly;
 
-      function dateStr(i) {
-        const dt = new Date(daily.time[i]);
-        return `${String(dt.getDate()).padStart(2,'0')} ${MONTHS[dt.getMonth()]}`;
-      }
-
-      const forecast = daily.time.map((_, i) => ({
-        day: dayName(i), date: dateStr(i),
-        code: daily.weathercode[i],
-        tMax: Math.round(daily.temperature_2m_max[i]),
-        tMin: Math.round(daily.temperature_2m_min[i]),
-        rain: daily.precipitation_probability_max[i] || 0,
-        wind: Math.round(daily.wind_speed_10m_max[i]),
-        wDir: windDir(daily.wind_direction_10m_dominant[i]),
+      // Dados diários
+      const dailyForecast = daily.time.map((_, index) => ({
+        dayName: getDayName(daily.time[index]),
+        date: formatDate(daily.time[index]),
+        code: daily.weathercode[index],
+        maxTemp: Math.round(daily.temperature_2m_max[index]),
+        minTemp: Math.round(daily.temperature_2m_min[index]),
+        rainChance: daily.precipitation_probability_max[index] || 0,
+        windSpeed: Math.round(daily.wind_speed_10m_max[index]),
+        windDirection: getWindDirection(daily.wind_direction_10m_dominant[index]),
       }));
 
-      // Hourly: next 8
+      // Dados horários (próximas 8 horas)
       const now = new Date();
-      const ch = now.getHours();
-      const hourly = [];
-      for (let i = 0; i < hData.time.length; i++) {
-        const t = new Date(hData.time[i]);
-        if (t.getHours() >= ch && t.getHours() < ch + 8 && t.getDate() === now.getDate()) {
-          hourly.push({
-            hour: String(t.getHours()).padStart(2,'0') + 'h',
-            temp: Math.round(hData.temperature_2m[i]),
-            rain: hData.precipitation_probability[i] || 0,
-            code: hData.weathercode[i],
+      const currentHour = now.getHours();
+      const hourlyForecast = [];
+
+      for (let i = 0; i < hourly.time.length; i++) {
+        const hourDate = new Date(hourly.time[i]);
+        const matchesToday = hourDate.getDate() === now.getDate();
+        const isWithinRange = hourDate.getHours() >= currentHour && hourDate.getHours() < currentHour + 8;
+
+        if (isWithinRange && matchesToday) {
+          hourlyForecast.push({
+            time: String(hourDate.getHours()).padStart(2, '0') + 'h',
+            temperature: Math.round(hourly.temperature_2m[i]),
+            rainChance: hourly.precipitation_probability[i] || 0,
+            code: hourly.weathercode[i],
           });
         }
       }
 
-      const today = forecast[0];
-      const w = wmo(today.code);
-
+      // Montagem do HTML
       root.innerHTML = `
-        <div class="wm" style="--wg:${curW.g}">
-          <div class="wm-hero">
-            <div class="wm-cur">
-              <div class="wm-cur-icon">${iconHTML(curW.i)}</div>
-              <div class="wm-cur-info">
-                <span class="wm-temp">${cur.temperature_2m}°C</span>
-                <span class="wm-feels">Sensação ${cur.apparent_temperature}°C</span>
-                <span class="wm-desc">${curW.l}</span>
-                <span class="wm-loc">${CITY}, ${STATE}</span>
-              </div>
-            </div>
-            <div class="wm-dets">
-              <div class="wd"><span class="wd-l">Umidade</span><span class="wd-v">${cur.relative_humidity_2m}%</span></div>
-              <div class="wd"><span class="wd-l">Vento</span><span class="wd-v">${cur.wind_speed_10m}</span><span class="wd-s">${windDir(cur.wind_direction_10m)}</span></div>
-              <div class="wd"><span class="wd-l">UV</span><span class="wd-v">${cur.uv_index}</span><span class="wd-s">${cur.uv_index>=8?'Extremo':cur.uv_index>=6?'Alto':cur.uv_index>=3?'Moderado':'Baixo'}</span></div>
-              <div class="wd"><span class="wd-l">Máx/Mín</span><span class="wd-v">${today.tMax}°/${today.tMin}°</span></div>
-            </div>
-          </div>
-          ${hourly.length ? `
-          <div class="wm-hourly">
-            ${hourly.map(h => {
-              const hw = wmo(h.code);
-              return `<div class="hc"><span class="hc-t">${h.hour}</span>${iconHTML(hw.i)}<span class="hc-temp">${h.temp}°</span><span class="hc-r">${h.rain}%</span></div>`;
-            }).join('')}
-          </div>` : ''}
-        </div>
+        ${buildCurrentWeather(current, dailyForecast[0])}
+        ${buildHourlyForecast(hourlyForecast)}
+        ${buildDailyForecast(dailyForecast)}`;
 
-        <div class="ww">
-          ${forecast.map((f, i) => {
-            const fw = wmo(f.code);
-            const isT = i === 0;
-            return `
-            <div class="wd-card glass ${isT?'today':''}">
-              <span class="wd-n">${isT?'Hoje':f.day}</span>
-              <span class="wd-d">${f.date}</span>
-              <div class="wd-iw">${iconHTML(fw.i)}</div>
-              <span class="wd-c">${fw.l}</span>
-              <div class="wd-tt"><span class="wd-max">${f.tMax}°</span><span class="wd-sep">/</span><span class="wd-min">${f.tMin}°</span></div>
-              <div class="wd-x"><span class="wd-r ${f.rain?'has-r':''}"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor"><path d="M4 6a4 4 0 1 1 8 0c0 2.5-2 5-4 7-2-2-4-4.5-4-7z"/></svg>${f.rain}%</span><span class="wd-w"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor"><path d="M1 8h11.5a2.5 2.5 0 0 0 0-5h-.5m-4 10h5.5a2.5 2.5 0 0 0 0-5H13"/></svg>${f.wind} ${f.wDir}</span></div>
-            </div>`;
-          }).join('')}
-        </div>`;
-    } catch (e) {
-      root.innerHTML = '<p style="text-align:center;color:var(--color-ink-muted);padding:var(--space-8)">Previsão temporariamente indisponível.</p>';
+    } catch (error) {
+      root.innerHTML = '<p class="weather-error">Previsão temporariamente indisponível. Tente novamente mais tarde.</p>';
     }
   }
 
-  load();
+  loadWeatherData();
 })();
 </script>
 
 <style>
-  .weather-root { min-height: 200px; }
-
-  .wm { overflow: hidden; margin-bottom: var(--space-6); }
-  .wm-hero {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: var(--space-8); gap: var(--space-8);
-    background: var(--wg); position: relative;
+  .weather-root {
+    min-height: 200px;
   }
-  .wm-hero::after {
-    content: ''; position: absolute; inset: 0;
+
+  .weather-error {
+    text-align: center;
+    color: var(--color-ink-muted);
+    padding: var(--space-8);
+  }
+
+  /* ===== Card Principal (Agora) ===== */
+  .weather-current-section {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-8);
+    gap: var(--space-8);
+    margin-bottom: var(--space-6);
+    border-radius: var(--radius-lg);
+    background: var(--weather-gradient);
+    overflow: hidden;
+  }
+
+  .weather-current-section__overlay {
+    position: absolute;
+    inset: 0;
     background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1));
     pointer-events: none;
   }
-  .wm-hero > * { position: relative; z-index: 1; }
-  @media (max-width: 768px) { .wm-hero { flex-direction: column; } }
 
-  .wm-cur { display: flex; align-items: center; gap: var(--space-6); }
-  .wm-cur-icon .wi { width: 80px; height: 80px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2)); }
-  .wm-cur-info { display: flex; flex-direction: column; }
-
-  .wm-temp {
-    font-size: 4rem; font-weight: var(--weight-bold); color: white;
-    line-height: 1; text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  .weather-current-section > * {
+    position: relative;
+    z-index: 1;
   }
-  .wm-feels { font-size: var(--text-base); color: rgba(255,255,255,0.8); margin-top: 2px; }
-  .wm-desc { font-size: var(--text-lg); color: white; font-weight: var(--weight-semibold); margin-top: var(--space-1); }
-  .wm-loc { font-size: var(--text-sm); color: rgba(255,255,255,0.7); }
 
-  .wm-dets { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
-  .wd {
-    display: flex; flex-direction: column; align-items: center;
-    background: rgba(255,255,255,0.15); backdrop-filter: blur(4px);
-    border-radius: var(--radius-md); padding: var(--space-2) var(--space-3);
+  @media (max-width: 768px) {
+    .weather-current-section {
+      flex-direction: column;
+      text-align: center;
+    }
   }
-  .wd-l { font-size: var(--text-xs); color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.05em; }
-  .wd-v { font-size: var(--text-lg); font-weight: var(--weight-bold); color: white; }
-  .wd-s { font-size: var(--text-xs); color: rgba(255,255,255,0.7); }
 
-  .wm-hourly {
-    display: flex; gap: var(--space-4); overflow-x: auto;
-    padding: var(--space-4) var(--space-8); background: rgba(0,0,0,0.05);
+  .weather-current-main {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+  }
+
+  @media (max-width: 768px) {
+    .weather-current-main {
+      flex-direction: column;
+    }
+  }
+
+  .weather-current-icon-wrapper .weather-svg-icon {
+    width: 80px;
+    height: 80px;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+  }
+
+  .weather-current-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .weather-current-temperature {
+    font-size: 4rem;
+    font-weight: var(--weight-bold);
+    color: white;
+    line-height: 1;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .weather-current-feels-like {
+    font-size: var(--text-base);
+    color: rgba(255,255,255,0.8);
+    margin-top: 2px;
+  }
+
+  .weather-current-condition {
+    font-size: var(--text-lg);
+    color: white;
+    font-weight: var(--weight-semibold);
+    margin-top: var(--space-1);
+  }
+
+  .weather-current-location {
+    font-size: var(--text-sm);
+    color: rgba(255,255,255,0.7);
+  }
+
+  .weather-current-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3);
+  }
+
+  .weather-detail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(4px);
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .weather-detail__label {
+    font-size: var(--text-xs);
+    color: rgba(255,255,255,0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .weather-detail__value {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
+    color: white;
+  }
+
+  .weather-detail__value small {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-normal);
+  }
+
+  .weather-detail__sub {
+    font-size: var(--text-xs);
+    color: rgba(255,255,255,0.7);
+  }
+
+  /* ===== Previsão Horária ===== */
+  .weather-hourly-section {
+    display: flex;
+    gap: var(--space-4);
+    overflow-x: auto;
+    padding: var(--space-4) var(--space-8);
+    margin-bottom: var(--space-6);
+    background: var(--color-surface-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
     scrollbar-width: thin;
   }
-  .hc {
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    min-width: 56px; flex-shrink: 0;
+
+  .weather-hourly-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 56px;
+    flex-shrink: 0;
   }
-  .hc .wi { width: 28px; height: 28px; }
-  .hc-t { font-size: var(--text-xs); color: var(--color-ink-muted); font-weight: var(--weight-medium); }
-  .hc-temp { font-size: var(--text-sm); font-weight: var(--weight-bold); color: var(--color-ink); }
-  .hc-r { font-size: 10px; color: #4a8aff; font-weight: var(--weight-medium); }
 
-  .ww { display: grid; grid-template-columns: repeat(8, 1fr); gap: var(--space-3); }
-  @media (max-width: 768px) { .ww { grid-template-columns: repeat(4, 1fr); } }
-  @media (max-width: 480px) { .ww { grid-template-columns: repeat(2, 1fr); } }
+  .weather-hourly-item .weather-svg-icon {
+    width: 28px;
+    height: 28px;
+  }
 
-  .wd-card {
-    display: flex; flex-direction: column; align-items: center;
-    gap: var(--space-1); padding: var(--space-4); text-align: center;
+  .weather-hourly-item__time {
+    font-size: var(--text-xs);
+    color: var(--color-ink-muted);
+    font-weight: var(--weight-medium);
+  }
+
+  .weather-hourly-item__temp {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
+    color: var(--color-ink);
+  }
+
+  .weather-hourly-item__rain {
+    font-size: 10px;
+    color: #4a8aff;
+    font-weight: var(--weight-medium);
+  }
+
+  /* ===== Previsão Diária (8 dias) ===== */
+  .weather-daily-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: var(--space-3);
+  }
+
+  @media (max-width: 768px) {
+    .weather-daily-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .weather-daily-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .weather-daily-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    text-align: center;
+    background: var(--color-surface-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
     transition: all var(--duration-base) var(--ease-spring);
   }
-  .wd-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
-  .wd-card.today { border-color: var(--color-primary); background: rgba(192,96,0,0.06); }
 
-  .wd-n { font-size: var(--text-sm); font-weight: var(--weight-bold); color: var(--color-ink); text-transform: uppercase; }
-  .wd-d { font-size: var(--text-xs); color: var(--color-ink-subtle); }
-  .wd-iw .wi { width: 36px; height: 36px; }
-  .wd-c { font-size: 11px; color: var(--color-ink-muted); line-height: 1.2; min-height: 2.4em; display: flex; align-items: center; }
-  .wd-tt { display: flex; gap: var(--space-1); font-size: var(--text-sm); font-weight: var(--weight-semibold); }
-  .wd-max { color: var(--color-primary); }
-  .wd-sep, .wd-min { color: var(--color-ink-subtle); }
-  .wd-x { display: flex; gap: var(--space-2); font-size: 11px; color: var(--color-ink-subtle); align-items: center; flex-wrap: wrap; justify-content: center; }
-  .wd-r, .wd-w { display: inline-flex; align-items: center; gap: 2px; }
-  .wd-r svg, .wd-w svg { opacity: 0.6; }
-  .wd-r.has-r { color: #4a8aff; }
+  .weather-daily-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  }
+
+  .weather-daily-card--today {
+    border-color: var(--color-primary);
+    background: rgba(192,96,0,0.06);
+  }
+
+  .weather-daily-card__name {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
+    color: var(--color-ink);
+    text-transform: uppercase;
+  }
+
+  .weather-daily-card__date {
+    font-size: var(--text-xs);
+    color: var(--color-ink-subtle);
+  }
+
+  .weather-daily-card__icon .weather-svg-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .weather-daily-card__condition {
+    font-size: 11px;
+    color: var(--color-ink-muted);
+    line-height: 1.2;
+    min-height: 2.4em;
+    display: flex;
+    align-items: center;
+  }
+
+  .weather-daily-card__temps {
+    display: flex;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+  }
+
+  .weather-daily-card__temp-max {
+    color: var(--color-primary);
+  }
+
+  .weather-daily-card__temp-sep,
+  .weather-daily-card__temp-min {
+    color: var(--color-ink-subtle);
+  }
+
+  .weather-daily-card__extras {
+    display: flex;
+    gap: var(--space-2);
+    font-size: 11px;
+    color: var(--color-ink-subtle);
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .weather-daily-card__rain,
+  .weather-daily-card__wind {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .weather-daily-card__rain svg,
+  .weather-daily-card__wind svg {
+    opacity: 0.6;
+  }
+
+  .weather-daily-card__rain--active {
+    color: #4a8aff;
+  }
 </style>
