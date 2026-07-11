@@ -34,7 +34,7 @@ npm run preview  # Preview do build local
 
 O deploy automático para GitHub Pages acontece via GitHub Actions (push na branch `master`).
 
-URL: https://marlonsantiago60-wq.github.io/esmeralda-web-radio/
+URL: https://Esmeraldawebradio.github.io/esmeralda-web-radio/
 
 ## Estrutura
 

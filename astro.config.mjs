@@ -1,6 +1,6 @@
 import { defineConfig } from "astro/config";
 export default defineConfig({
-  site: "https://marlonsantiago60-wq.github.io",
+  site: "https://Esmeraldawebradio.github.io",
   base: "/esmeralda-web-radio",
   output: "static"
 });
