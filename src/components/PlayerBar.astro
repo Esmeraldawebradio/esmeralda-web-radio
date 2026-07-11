@@ -278,11 +278,27 @@ const presenter = Array.isArray(currentProgram.presenters)
   (function() {
     'use strict';
 
-    // Em HTTPS (produção no GitHub Pages) o stream http é bloqueado por mixed content,
-    // então usamos o proxy CORS. Em dev (http) usamos o stream direto.
-    const STREAM_URL = location.protocol === 'https:'
-      ? 'https://corsproxy.io/?url=' + encodeURIComponent(RAW_STREAM_URL)
-      : RAW_STREAM_URL;
+    // Em HTTPS (produção) o stream http é bloqueado por mixed content,
+    // então tentamos múltiplos proxies CORS com fallback automático.
+    const PROXIES = [
+      (url) => 'https://corsproxy.io/?url=' + encodeURIComponent(url),
+      (url) => 'https://corsproxy.org/?' + encodeURIComponent(url),
+    ];
+    const streamDirect = RAW_STREAM_URL;
+    const isHttps = location.protocol === 'https:';
+
+    // Gera a lista de URLs para tentar: proxies primeiro, depois direto (fallback)
+    function getStreamUrls() {
+      const urls = [];
+      if (isHttps) {
+        for (const p of PROXIES) urls.push(p(streamDirect));
+      }
+      urls.push(streamDirect);
+      return urls;
+    }
+
+    let streamUrlIndex = 0;
+    const STREAM_URLS = getStreamUrls();
 
     const playBtn = document.getElementById('play-btn');
     const volumeBtn = document.getElementById('volume-btn');
@@ -306,7 +322,7 @@ const presenter = Array.isArray(currentProgram.presenters)
       audio = new Audio();
       audio.preload = 'metadata';
       audio.crossOrigin = 'anonymous';
-      audio.src = STREAM_URL;
+      setAudioSource(streamUrlIndex);
 
       audio.addEventListener('loadstart', onLoadStart);
       audio.addEventListener('canplay', onCanPlay);
@@ -316,6 +332,13 @@ const presenter = Array.isArray(currentProgram.presenters)
       audio.addEventListener('waiting', onWaiting);
       audio.addEventListener('stalled', onStalled);
       audio.addEventListener('ended', onEnded);
+    }
+
+    function setAudioSource(index) {
+      if (!audio) return;
+      const url = STREAM_URLS[index] || STREAM_URLS[0];
+      audio.src = url;
+      streamUrlIndex = index;
     }
 
     // ===== Event Handlers =====
@@ -359,18 +382,27 @@ const presenter = Array.isArray(currentProgram.presenters)
       stopMetadataPolling();
       setBuffering(false);
 
-      if (retryCount < MAX_RETRIES) {
+      // Tentar próximo proxy na lista
+      const nextIndex = streamUrlIndex + 1;
+      if (nextIndex < STREAM_URLS.length) {
+        console.log('[PlayerBar] Tentando proxy alternativo:', nextIndex);
+        retryCount = 0;
+        setAudioSource(nextIndex);
+        if (audio) {
+          audio.load();
+          audio.play().catch(() => {});
+        }
+      } else if (retryCount < MAX_RETRIES) {
         retryCount++;
         setTimeout(() => {
           if (audio) {
-            audio.src = STREAM_URL;
+            setAudioSource(streamUrlIndex);
             audio.load();
             playBtn.click();
           }
         }, 1000 * retryCount);
       } else {
         setError(true);
-        // Esconde a barra após erro persistente (conforme shape)
         setTimeout(() => {
           document.querySelector('[data-player-bar]')?.classList.add('hidden');
         }, 5000);
@@ -481,6 +513,10 @@ const presenter = Array.isArray(currentProgram.presenters)
       if (isPlaying) {
         audio.pause();
       } else {
+        // Resetar para o primeiro proxy ao tentar tocar novamente
+        if (playBtn.classList.contains('error')) {
+          setAudioSource(0);
+        }
         setBuffering(true);
         try {
           await audio.play();
