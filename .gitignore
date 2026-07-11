@@ -27,3 +27,7 @@ Desktop.ini
 *.tsbuildinfo
 .eslintcache
 .cache
+
+# Agentes/AI
+.claude/
+.codex/
