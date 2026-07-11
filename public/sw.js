@@ -1,13 +1,15 @@
-/* Esmeralda Web Rádio — Service Worker
- * Estratégia:
+/* Esmeralda Web Radio — Service Worker
+ * Estrategia:
  *  - App shell em cache no install (offline fallback)
- *  - Navegação: network-first com fallback para cache/offline
- *  - Assets estáticos (mesma origem): stale-while-revalidate
- *  - Requisições cross-origin (stream, fontes): via rede (não cacheadas)
+ *  - Navegacao: network-first com fallback para cache/offline
+ *  - Assets estaticos (mesma origem): stale-while-revalidate
+ *  - /proxy-stream: proxy do stream HTTP (contorna mixed content em HTTPS)
  */
+
 const CACHE = 'esmeralda-v1';
 const OFFLINE_URL = './404.html';
 const PRECACHE = ['./', './404.html', './manifest.webmanifest', './favicon.svg'];
+const STREAM_ORIGIN = 'http://usa3.fastcast4u.com:1080';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -31,10 +33,16 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // Não interceptar cross-origin (stream de áudio, Google Fonts)
+  // Proxy do stream de audio (para HTTPS, pois o stream e HTTP)
+  if (url.pathname.endsWith('/proxy-stream')) {
+    event.respondWith(proxyStream(event));
+    return;
+  }
+
+  // Nao interceptar cross-origin
   if (url.origin !== self.location.origin) return;
 
-  // Navegações (HTML): network-first
+  // Navegacoes (HTML): network-first
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
@@ -51,7 +59,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Assets estáticos: stale-while-revalidate
+  // Assets estaticos: stale-while-revalidate
   event.respondWith(
     caches.match(request).then((cached) => {
       const network = fetch(request)
@@ -67,3 +75,25 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+async function proxyStream() {
+  try {
+    const response = await fetch(STREAM_ORIGIN + '/stream', {
+      headers: { 'Icy-MetaData': '1' },
+      mode: 'cors',
+    });
+
+    const responseHeaders = new Headers(response.headers);
+    responseHeaders.set('Access-Control-Allow-Origin', '*');
+    responseHeaders.set('Content-Type', 'audio/mpeg');
+
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: responseHeaders,
+    });
+  } catch (err) {
+    console.error('[SW] Proxy stream error:', err);
+    return new Response('Stream unavailable', { status: 502 });
+  }
+}

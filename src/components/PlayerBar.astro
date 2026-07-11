@@ -11,6 +11,7 @@ interface Props extends AstroProps {
 }
 
 const { streamUrl = STATION.url } = Astro.props;
+const BASE_PATH = import.meta.env.BASE_URL;
 const now = new Date();
 const currentHour = now.getHours();
 const currentMinute = now.getMinutes();
@@ -273,14 +274,17 @@ const presenter = Array.isArray(currentProgram.presenters)
   </button>
 </div>
 
-<script is:inline define:vars={{ SCHEDULE, RAW_STREAM_URL: STATION.url }}>
+<script is:inline define:vars={{ SCHEDULE, RAW_STREAM_URL: STATION.url, BASE_PATH }}>
   // ===== PlayerBar Logic (Vanilla JS, roda no cliente) =====
   (function() {
     'use strict';
 
-    // Em HTTPS (produção) o stream http é bloqueado por mixed content,
-    // então tentamos múltiplos proxies CORS com fallback automático.
+    // Em HTTPS (producao) o stream http e bloqueado por mixed content,
+    // usamos o Service Worker como proxy (mesma origem, sem CORS).
     const PROXIES = [
+      // SW proxy (mesma origem, nao precisa de CORS)
+      (url) => window.location.origin + BASE_PATH + 'proxy-stream',
+      // Proxies externos como fallback
       (url) => 'https://corsproxy.io/?url=' + encodeURIComponent(url),
       (url) => 'https://corsproxy.org/?' + encodeURIComponent(url),
     ];
