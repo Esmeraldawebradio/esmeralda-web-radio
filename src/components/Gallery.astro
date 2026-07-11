@@ -1,0 +1,114 @@
+---
+interface GalleryItem {
+  src: string;
+  alt: string;
+  caption?: string;
+}
+
+const PHOTOS: GalleryItem[] = [
+  { src: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80", alt: "Praia paradisíaca", caption: "Praia do Sancho, PE" },
+  { src: "https://images.unsplash.com/photo-1518495973-00e7c2b6f0e4?w=600&q=80", alt: "Pôr do sol no cerrado", caption: "Chapada dos Veadeiros, GO" },
+  { src: "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?w=600&q=80", alt: "Cristo Redentor", caption: "Rio de Janeiro, RJ" },
+  { src: "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?w=600&q=80", alt: "Cachoeira", caption: "Foz do Iguaçu, PR" },
+  { src: "https://images.unsplash.com/photo-1574169208507-84376144848b?w=600&q=80", alt: "Amazônia", caption: "Floresta Amazônica, AM" },
+  { src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&q=80", alt: "Pelourinho", caption: "Salvador, BA" },
+];
+---
+
+<section id="galeria" class="gallery-section" aria-labelledby="gallery-title">
+  <div class="container">
+    <header class="section-header">
+      <h2 id="gallery-title" class="section-title">Galeria de Fotos</h2>
+      <p class="section-subtitle">Belezas do Brasil em cada clique</p>
+    </header>
+
+    <div class="gallery-grid">
+      {PHOTOS.map((photo, i) => (
+        <a
+          href={photo.src.replace('w=600&q=80', 'w=1200&q=90')}
+          class="gallery-item glass clickable"
+          target="_blank"
+          rel="noopener"
+          style={`--i: ${i}`}
+          aria-label={photo.alt}
+        >
+          <img src={photo.src} alt={photo.alt} loading="lazy" />
+          {photo.caption && (
+            <div class="gallery-caption">
+              <span>{photo.caption}</span>
+            </div>
+          )}
+        </a>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .gallery-section {
+    padding: var(--space-16) 0;
+    background: var(--color-surface);
+  }
+
+  .gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+  }
+
+  @media (max-width: 768px) {
+    .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 480px) {
+    .gallery-grid { grid-template-columns: 1fr; }
+  }
+
+  .gallery-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    aspect-ratio: 4 / 3;
+    display: block;
+    transition: all var(--duration-base) var(--ease-spring);
+    animation: gallery-in 0.6s var(--ease-out-quart) both;
+    animation-delay: calc(var(--i, 0) * 80ms);
+  }
+  .gallery-item:hover {
+    transform: scale(1.04) translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+    text-decoration: none;
+  }
+
+  @keyframes gallery-in {
+    from { opacity: 0; transform: scale(0.9) translateY(20px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  .gallery-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--duration-slow) var(--ease-out-quart);
+  }
+  .gallery-item:hover img {
+    transform: scale(1.1);
+  }
+
+  .gallery-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: var(--space-3) var(--space-4);
+    background: linear-gradient(transparent, rgba(0,0,0,0.6));
+    color: white;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    transform: translateY(100%);
+    transition: transform var(--duration-base) var(--ease-out-quart);
+  }
+  .gallery-item:hover .gallery-caption {
+    transform: translateY(0);
+  }
+</style>

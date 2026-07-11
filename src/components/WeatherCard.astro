@@ -1,0 +1,241 @@
+---
+const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+function getDayName(offset) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return DAYS[d.getDay()];
+}
+
+function getDateStr(offset) {
+  const d = new Date();
+  d.setDate(d.getDate() + offset);
+  return `${d.getDate()}/${d.getMonth() + 1}`;
+}
+
+const FORECAST = Array.from({ length: 7 }, (_, i) => ({
+  day: getDayName(i),
+  date: getDateStr(i),
+  icon: ["☀️", "⛅", "🌤️", "🌧️", "⛅", "☀️", "🌤️"][i],
+  tempMax: [32, 30, 28, 26, 29, 31, 33][i],
+  tempMin: [22, 21, 20, 19, 21, 22, 23][i],
+  humidity: [55, 62, 70, 78, 65, 58, 52][i],
+  rain: [5, 20, 45, 70, 30, 10, 5][i],
+  condition: [
+    "Ensolarado", "Parcialmente Nublado", "Predomínio de Sol",
+    "Chuvas Isoladas", "Parcialmente Nublado", "Ensolarado", "Predomínio de Sol"
+  ][i]
+}));
+
+const today = FORECAST[0];
+---
+
+<section id="clima" class="weather-section" aria-labelledby="weather-title">
+  <div class="container">
+    <header class="section-header">
+      <h2 id="weather-title" class="section-title">Previsão do Tempo</h2>
+      <p class="section-subtitle">Acompanhe as condições climáticas para os próximos dias</p>
+    </header>
+
+    <div class="weather-today glass">
+      <div class="weather-today-main">
+        <span class="weather-icon-today">{today.icon}</span>
+        <div class="weather-today-info">
+          <span class="weather-temp-today">{today.tempMax}°C</span>
+          <span class="weather-condition">{today.condition}</span>
+          <span class="weather-location">📍 Brasil</span>
+        </div>
+      </div>
+      <div class="weather-today-details">
+        <div class="weather-detail">
+          <span class="detail-label">Mín</span>
+          <span class="detail-value">{today.tempMin}°C</span>
+        </div>
+        <div class="weather-detail">
+          <span class="detail-label">Máx</span>
+          <span class="detail-value">{today.tempMax}°C</span>
+        </div>
+        <div class="weather-detail">
+          <span class="detail-label">Chuva</span>
+          <span class="detail-value">{today.rain}%</span>
+        </div>
+        <div class="weather-detail">
+          <span class="detail-label">Umidade</span>
+          <span class="detail-value">{today.humidity}%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="weather-week">
+      {FORECAST.slice(1).map((day) => (
+        <div class="weather-day glass clickable" role="button" tabindex="0">
+          <span class="day-name">{day.day}</span>
+          <span class="day-date">{day.date}</span>
+          <span class="day-icon">{day.icon}</span>
+          <span class="day-temps">
+            <span class="day-max">{day.tempMax}°</span>
+            <span class="day-min">{day.tempMin}°</span>
+          </span>
+          <div class="day-rain-bar" style={`--rain: ${day.rain}%`} aria-label={`Chuva ${day.rain}%`}>
+            <div class="rain-fill"></div>
+          </div>
+          <span class="day-condition">{day.condition}</span>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<style>
+  .weather-section {
+    padding: var(--space-16) 0;
+  }
+
+  .weather-today {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-6) var(--space-8);
+    margin-bottom: var(--space-6);
+    gap: var(--space-6);
+    flex-wrap: wrap;
+  }
+
+  .weather-today-main {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .weather-icon-today {
+    font-size: 4rem;
+    line-height: 1;
+  }
+
+  .weather-today-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .weather-temp-today {
+    font-size: 3rem;
+    font-weight: var(--weight-bold);
+    color: var(--color-primary);
+    line-height: 1.1;
+  }
+
+  .weather-condition {
+    font-size: var(--text-lg);
+    color: var(--color-ink-muted);
+    font-weight: var(--weight-medium);
+  }
+
+  .weather-location {
+    font-size: var(--text-sm);
+    color: var(--color-ink-subtle);
+  }
+
+  .weather-today-details {
+    display: flex;
+    gap: var(--space-6);
+  }
+
+  .weather-detail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .detail-label {
+    font-size: var(--text-xs);
+    color: var(--color-ink-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .detail-value {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
+    color: var(--color-ink);
+  }
+
+  .weather-week {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: var(--space-3);
+  }
+
+  @media (max-width: 768px) {
+    .weather-week { grid-template-columns: repeat(3, 1fr); }
+    .weather-today { flex-direction: column; text-align: center; }
+    .weather-today-main { flex-direction: column; }
+    .weather-today-details { justify-content: center; }
+  }
+
+  @media (max-width: 480px) {
+    .weather-week { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .weather-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    text-align: center;
+    transition: all var(--duration-base) var(--ease-spring);
+  }
+  .weather-day:hover {
+    transform: translateY(-4px) scale(1.04);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  }
+
+  .day-name {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
+    color: var(--color-ink);
+    text-transform: uppercase;
+  }
+
+  .day-date {
+    font-size: var(--text-xs);
+    color: var(--color-ink-subtle);
+  }
+
+  .day-icon {
+    font-size: 2rem;
+  }
+
+  .day-temps {
+    display: flex;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+  }
+
+  .day-max { color: var(--color-primary); }
+  .day-min { color: var(--color-ink-subtle); }
+
+  .day-rain-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--color-border);
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+
+  .rain-fill {
+    width: var(--rain);
+    height: 100%;
+    background: linear-gradient(90deg, #4fc3f7, #1565c0);
+    border-radius: 9999px;
+    transition: width var(--duration-slow) var(--ease-out-quart);
+  }
+
+  .day-condition {
+    font-size: var(--text-xs);
+    color: var(--color-ink-muted);
+  }
+</style>

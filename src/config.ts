@@ -5,7 +5,7 @@
 
 export const CONTACT = {
   whatsapp: "5574999999999",
-  email: "contato@esmeraldawebradio.com.br"
+  email: "marlonsantiago.0002@gmail.com"
 };
 
 export const APPS = {
