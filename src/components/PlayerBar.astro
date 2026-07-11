@@ -274,36 +274,13 @@ const presenter = Array.isArray(currentProgram.presenters)
   </button>
 </div>
 
-<script is:inline define:vars={{ SCHEDULE, RAW_STREAM_URL: STATION.url, BASE_PATH }}>
+<script is:inline define:vars={{ SCHEDULE, RAW_STREAM_URL: STATION.url }}>
   // ===== PlayerBar Logic (Vanilla JS, roda no cliente) =====
   (function() {
     'use strict';
 
-    // Em HTTPS (producao) o stream http e bloqueado por mixed content,
-    // usamos o Service Worker como proxy (mesma origem, sem CORS).
-    const PROXIES = [
-      // SW proxy (mesma origem, nao precisa de CORS)
-      (url) => window.location.origin + BASE_PATH + '/proxy-stream',
-      // Proxies externos como fallback
-      (url) => 'https://corsproxy.io/?url=' + encodeURIComponent(url),
-      (url) => 'https://corsproxy.org/?' + encodeURIComponent(url),
-      (url) => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
-    ];
-    const streamDirect = RAW_STREAM_URL;
-    const isHttps = location.protocol === 'https:';
-
-    // Gera a lista de URLs para tentar: proxies primeiro, depois direto (fallback)
-    function getStreamUrls() {
-      const urls = [];
-      if (isHttps) {
-        for (const p of PROXIES) urls.push(p(streamDirect));
-      }
-      urls.push(streamDirect);
-      return urls;
-    }
-
+    const STREAM_URLS = [RAW_STREAM_URL];
     let streamUrlIndex = 0;
-    const STREAM_URLS = getStreamUrls();
 
     const playBtn = document.getElementById('play-btn');
     const volumeBtn = document.getElementById('volume-btn');
@@ -398,35 +375,17 @@ const presenter = Array.isArray(currentProgram.presenters)
       stopMetadataPolling();
       setBuffering(false);
 
-      // Tentar próximo proxy na lista
-      const nextIndex = streamUrlIndex + 1;
-      if (nextIndex < STREAM_URLS.length) {
-        console.log('[PlayerBar] Tentando proxy alternativo:', nextIndex);
-        retryCount = 0;
-        setAudioSource(nextIndex);
-        if (audio) {
-          audio.load();
-          audio.play().catch(() => {});
-        }
-      } else if (retryCount < MAX_RETRIES) {
+      if (retryCount < MAX_RETRIES) {
         retryCount++;
-        // Volta para o primeiro proxy (SW pode ter sido instalado)
         setTimeout(() => {
           if (audio) {
-            setAudioSource(0);
             audio.load();
-            playBtn.click();
+            audio.play().catch(() => {});
           }
-        }, 1000 * retryCount);
+        }, 2000 * retryCount);
       } else {
-        // Nada funcionou — mostra erro e tenta stream direto como ultimo caso
         setError(true);
-        console.warn('[PlayerBar] Todos os proxies falharam. Tentando stream direto...');
-        setAudioSource(STREAM_URLS.length - 1);
-        if (audio) {
-          audio.load();
-          audio.play().catch(() => {});
-        }
+        console.warn('[PlayerBar] Todas as tentativas falharam.');
       }
     }
 
@@ -534,10 +493,7 @@ const presenter = Array.isArray(currentProgram.presenters)
       if (isPlaying) {
         audio.pause();
       } else {
-        // Resetar para o primeiro proxy ao tentar tocar novamente
-        if (playBtn.classList.contains('error')) {
-          setAudioSource(0);
-        }
+        retryCount = 0;
         setBuffering(true);
         try {
           await audio.play();

@@ -1,6 +1,6 @@
 ﻿export const STATION = {
   name: "Esmeralda Web Rádio",
-  url: "http://usa3.fastcast4u.com:1080/stream"
+  url: "https://esmeralda-stream-proxy.esmeraldawebradio.workers.dev/stream"
 };
 
 export const CONTACT = {
