@@ -1,0 +1,29 @@
+# Dependências
+node_modules/
+.pnp
+.pnp.js
+
+# Build
+dist/
+.astro/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swo
+*.swp
+
+# Ambiente
+.env
+.env.local
+.env.*.local
+
+# Tooling
+*.tsbuildinfo
+.eslintcache
+.cache

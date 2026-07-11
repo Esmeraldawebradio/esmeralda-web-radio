@@ -1,0 +1,427 @@
+---
+/**
+ * Base Layout — Esmeralda Web Rádio
+ * Inclui PlayerBar hidratado com client:visible
+ */
+import type { AstroProps } from 'astro';
+import PlayerBar from '../components/PlayerBar.astro';
+import '../styles/tokens.css';
+
+interface Props extends AstroProps {
+  title?: string;
+  description?: string;
+}
+
+const { title = 'Esmeralda Web Rádio', description = 'A rádio web moderna que conecta você com música e entretenimento de qualidade.' } = Astro.props;
+const base = import.meta.env.BASE_URL;
+const canonicalURL = new URL(Astro.url.pathname, 'https://marlonsantiago60-wq.github.io/esmeralda-web-radio/');
+const ogImage = `${canonicalURL.origin}${base}/og-image.png`;
+
+const jsonLd = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "RadioStation",
+  name: "Esmeralda Web Rádio",
+  url: `${canonicalURL.origin}${base}/`,
+  description: "A rádio web moderna que conecta você com música e entretenimento de qualidade.",
+  image: ogImage,
+  address: {
+    "@type": "PostalAddress",
+    addressCountry: "BR",
+    addressRegion: "BA"
+  },
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer service",
+    telephone: "+55-74-99999-9999",
+    email: "contato@esmeraldawebradio.com.br"
+  },
+  sameAs: [
+    "https://instagram.com/esmeraldawebradio",
+    "https://facebook.com/esmeraldawebradio",
+    "https://youtube.com/@esmeraldawebradio"
+  ]
+});
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#0891b2" />
+    <link rel="canonical" href={canonicalURL} />
+
+    <link rel="dns-prefetch" href="//usa3.fastcast4u.com" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:site_name" content="Esmeralda Web Rádio" />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <!-- Fonts: Plus Jakarta Sans via Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href={`${base}/favicon.svg`} />
+    <link rel="apple-touch-icon" href={`${base}/apple-touch-icon.png`} />
+    <link rel="manifest" href={`${base}/manifest.webmanifest`} />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json" set:html={jsonLd}></script>
+  </head>
+  <body>
+    <a href="#main-content" class="skip-link">Pular para o conteúdo</a>
+
+    <!-- Header / Nav -->
+    <header class="site-header" role="banner">
+      <div class="container">
+        <a href="/" class="logo" aria-label="Esmeralda Web Rádio - Início">
+          <svg class="logo-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <circle cx="16" cy="16" r="16" fill="var(--color-primary)"/>
+            <path d="M10 16c0-3.31 2.69-6 6-6s6 2.69 6 6-2.69 6-6 6" stroke="white" stroke-width="2" fill="none"/>
+            <path d="M16 10v12M10 16h12" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span class="logo-text">Esmeralda Web Rádio</span>
+        </a>
+
+        <nav class="main-nav" aria-label="Navegação principal">
+          <a href="/#programacao" class="nav-link">Programação</a>
+          <a href="/#sobre" class="nav-link">Sobre</a>
+          <a href="https://wa.me/5574999999999" class="nav-link nav-whatsapp" target="_blank" rel="noopener" aria-label="WhatsApp">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.472.099-.174.05-.372-.025-.52-.075-.148-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.378-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.672zm-4.864 4.123c-.51-.338-1.12-.77-1.56-1.228-.44-.459-.72-.93-.89-1.26-.173-.33-.223-.473-.248-.62-.024-.148-.025-.273.024-.423.049-.149.198-.347.397-.57.198-.198.647-.744 1.09-1.39.44-.646.893-1.25 1.13-1.645.248-.41.273-.52.322-.572.173-.173.63-.743 1.362-1.474.472-.472.83-.87 1.01-1.12.173-.248.148-.373.12-.473-.024-.074-.273-.915-.916-2.472-.642-1.56-1.48-2.908-2.57-3.797-.883-.71-1.82-1.326-2.894-1.82-.173-.075-.52-.075-.72 0-1.073.524-1.876 1.56-2.517 2.698-.61 1.09-1.09 2.114-1.317 2.863-.198.67-.223 1.018-.198 1.09.025.098.373.418.773 1.018.598.6 1.37 1.598 2.147 2.41.78.81 1.53 1.505 2.143 2.075.61.57 1.12 1.01 1.51 1.318.39.307.706.54 1.09.647.397.12.572.167.84.149l.223-.024c.223-.024.42-.174.547-.4.124-.223.148-.472.099-.62-.049-.148-.198-.447-.322-.62-.124-.173-.598-.723-1.466-1.872-.868-1.148-1.69-2.147-2.44-3.065-.75-.917-1.406-1.71-1.96-2.38-.55-.67-.89-1.27-1.16-1.773-.273-.504-.248-.778-.223-.916.024-.12-.123.222-.348.597-.867.398-.548.95-1.22 1.61-1.89.63-.64 1.313-1.25 2.08-1.746.75-.473 1.575-.82 2.51-1.01.51-.1 1.02-.1 1.49-.075.47.022.914.222 1.31.67.417.47.72 1.12.815 1.545.09.448.12.823.098.974-.025.174-.2.422-.473.723-.248.322-.647.79-.99 1.24-.322.42-.497.717-.547.843-.05.148-.074.347-.074.522 0 .223.148.547.498.895.35.35.748.648 1.147.896.397.248.773.422 1.122.547.397.1.87.148 1.267.148.597 0 1.14-.074 1.538-.223.397-.149.748-.372 1.047-.62.297-.223.547-.52.72-1.045l.197-.572c.098-.322.173-.694.173-1.09 0-.472-.174-.996-.497-1.418-.322-.42-.747-.815-1.247-1.19-.524-.397-1.1-1.02-1.82-1.72-.72-.7-.916-.915-.966-.965-.05-.05-.1-.2-.1-.35.025-.248.273-.72.62-1.14.373-.447.896-.895 1.59-1.29.694-.373 1.51-.72 2.413-.748.69-.02 1.353.123 1.937.448.584.325 1.047.78 1.396 1.26.348.473.572 1.045.696 1.692.123.646.098 1.243-.024 1.742-.123.497-.422 1.073-.896 1.42-.473.347-.996.52-1.56.548-.563.027-1.247.025-2.017-.024z"/></svg>
+          </a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content" role="main">
+      <slot />
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer" role="contentinfo">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <p class="footer-tagline">A rádio web moderna que conecta você com música e entretenimento de qualidade.</p>
+            <div class="footer-social" aria-label="Redes sociais">
+              <a href="https://instagram.com/esmeraldawebradio" target="_blank" rel="noopener" aria-label="Instagram">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 110 12.324 6.162 6.162 0 010-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 110 2.881 1.44 1.44 0 010-2.88z"/></svg>
+              </a>
+              <a href="https://facebook.com/esmeraldawebradio" target="_blank" rel="noopener" aria-label="Facebook">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              </a>
+              <a href="https://youtube.com/@esmeraldawebradio" target="_blank" rel="noopener" aria-label="YouTube">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L16.232 12l-6.687 3.568z"/></svg>
+              </a>
+            </div>
+          </div>
+
+          <nav class="footer-nav" aria-label="Links úteis">
+            <h3>Navegação</h3>
+            <ul>
+              <li><a href="/#programacao">Programação</a></li>
+              <li><a href="/#sobre">Sobre a Rádio</a></li>
+              <li><a href="/#contato">Contato</a></li>
+            </ul>
+          </nav>
+
+          <div class="footer-contact" aria-label="Contato">
+            <h3>Contato</h3>
+            <address>
+              <p><a href="https://wa.me/5574999999999" target="_blank" rel="noopener">WhatsApp: (74) 99999-9999</a></p>
+              <p><a href="mailto:contato@esmeraldawebradio.com.br">contato@esmeraldawebradio.com.br</a></p>
+            </address>
+          </div>
+
+          <div class="footer-apps" aria-label="Apps">
+            <h3>Apps</h3>
+            <div class="app-links">
+              <a href="https://apps.apple.com/br/app/esmeralda-web-radio" target="_blank" rel="noopener" class="app-link">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.71 15.61c-.86-.47-1.71-.69-2.57-.69-1.35 0-2.48.51-3.36 1.41-.21.21-.47.38-.69.6-.26.24-.5.49-.71.81-.2.31-.38.65-.49 1.01-.1.34-.15.7-.15 1.06 0 .35.03.65.1.89.06.22.17.4.32.55.15.14.35.24.55.31.35.12.72.18 1.06.18.56 0 1.06-.14 1.43-.42.4-.3.75-.66.96-1.05.21-.39.31-.79.31-1.18 0-.42-.08-.79-.25-1.09-.17-.3-.37-.54-.6-.71-.23-.17-.5-.29-.71-.35-.35-.1-.66-.14-1-.14-.86 0-1.5.15-1.91.45-.4.3-.68.69-.83 1.15-.15.44-.22.93-.22 1.44 0 1.02.16 1.89.47 2.6.3.7.73 1.28 1.28 1.72.55.45 1.2.67 1.95.67.98 0 1.72-.34 2.2-1.03.47-.69.7-1.58.7-2.66 0-.8-.1-1.55-.3-2.22-.2-.68-.5-1.27-.9-1.76-.4-.5-.88-.88-1.43-1.12-.56-.25-1.13-.42-1.72-.52zm-2.65 2.73c.61.37 1.04.89 1.29 1.58.25.69.37 1.5.37 2.4 0 1.81-.43 3.14-1.3 3.98-.87.85-2.22 1.27-4.06 1.27-1.72 0-3.09-.4-4.11-1.18-.97-.74-1.47-1.78-1.47-3.11 0-1.5.65-2.77 1.94-3.82 1.3-1.05 3.06-1.57 5.29-1.57.81 0 1.61.05 2.39.16.76.11 1.5.25 2.2.43zm-5.31-6.55c0-1.14-.23-2.07-.7-2.8-.47-.73-1.2-1.1-2.2-1.1-1.02 0-1.81.37-2.38 1.1-.56.73-.85 1.66-.85 2.8 0 1.1.28 2.03.85 2.76.56.73 1.36 1.1 2.38 1.1 1 0 1.73-.37 2.2-1.1.47-.73.7-1.66.7-2.76z"/></svg>
+                <span>App Store</span>
+              </a>
+              <a href="https://play.google.com/store/apps/details?id=com.esmeraldawebradio.app" target="_blank" rel="noopener" class="app-link">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1.46l-4.5-3.04v-4.84l4.5-3.03V9l7.46-4.91L12 4.56V6c0 3.57 2.58 6.63 6 7.59-.62.36-1.27.65-1.96.87-.68.22-1.39.36-2.13.36-.75 0-1.45-.14-2.1-.39zm8.49-13.32L12 7.26 6.49 9.79l-2.13-1.41L10.87 3.5 12 2.27l1.13 1.23 6.36 4.19-2.13 1.41z"/></svg>
+                <span>Google Play</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>&copy; 2025 Esmeralda Web Rádio. Todos os direitos reservados.</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Player Bar (script roda automaticamente em cada página) -->
+    <PlayerBar />
+
+    <noscript>
+      <div class="noscript-notice" role="alert">
+        <p>O player de áudio requer JavaScript. Aproveite a programação abaixo.</p>
+      </div>
+    </noscript>
+
+    <!-- Scripts globais -->
+    <script is:inline>
+      // Smooth scroll para âncoras
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+          const target = document.querySelector(this.getAttribute('href'));
+          if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+
+      // Year auto-update
+      document.querySelectorAll('[data-year]').forEach(el => {
+        el.textContent = new Date().getFullYear();
+      });
+    </script>
+
+    <!-- Service Worker (PWA offline) -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register(import.meta.env.BASE_URL + '/sw.js').catch(() => {});
+        });
+      }
+    </script>
+  </body>
+</html>
+
+<style>
+  /* ===== Layout Base ===== */
+  .container {
+    width: 100%;
+    max-width: var(--container-max);
+    margin: 0 auto;
+    padding: 0 var(--space-4);
+  }
+
+  /* ===== Header ===== */
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-sticky);
+    background: var(--color-surface-elevated);
+    border-bottom: 1px solid var(--color-border);
+    backdrop-filter: blur(8px);
+    padding: var(--space-3) 0;
+  }
+
+  .site-header .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    text-decoration: none;
+    color: var(--color-ink);
+  }
+
+  .logo-icon { width: 36px; height: 36px; flex-shrink: 0; }
+  .logo-text {
+    font-weight: var(--weight-bold);
+    font-size: var(--text-lg);
+    white-space: nowrap;
+  }
+
+  .main-nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+  }
+
+  .nav-link {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--color-ink-muted);
+    text-decoration: none;
+    padding: var(--space-1) 0;
+    position: relative;
+    transition: color var(--duration-fast) var(--ease-out-quart);
+  }
+
+  .nav-link:hover { color: var(--color-primary); }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--color-primary);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform var(--duration-base) var(--ease-out-quart);
+  }
+  .nav-link:hover::after { transform: scaleX(1); transform-origin: left; }
+
+  .nav-whatsapp {
+    display: flex; align-items: center; gap: var(--space-1);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-success);
+    color: white;
+    border-radius: var(--radius-full);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-sm);
+  }
+  .nav-whatsapp:hover { background: var(--color-success-hover); color: white; text-decoration: none; }
+  .nav-whatsapp svg { width: 18px; height: 18px; }
+
+  @media (max-width: 640px) {
+    .main-nav { gap: var(--space-3); }
+    .nav-link:not(.nav-whatsapp) { display: none; }
+    .logo-text { display: none; }
+  }
+
+  /* ===== Main ===== */
+  #main-content { min-height: calc(100vh - var(--header-height) - var(--player-height)); }
+
+  @media (max-width: 480px) {
+    #main-content { min-height: calc(100vh - var(--header-height) - var(--player-height-mobile)); }
+  }
+
+  /* ===== Footer ===== */
+  .site-footer {
+    background: var(--color-surface);
+    border-top: 1px solid var(--color-border);
+    padding: var(--space-12) 0 var(--space-6);
+    margin-top: var(--space-16);
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: var(--space-8);
+    margin-bottom: var(--space-10);
+  }
+
+  @media (max-width: 768px) {
+    .footer-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 480px) {
+    .footer-grid { grid-template-columns: 1fr; }
+  }
+
+  .footer-brand .footer-tagline {
+    color: var(--color-ink-muted);
+    font-size: var(--text-sm);
+    line-height: var(--leading-relaxed);
+    margin-bottom: var(--space-4);
+  }
+
+  .footer-social { display: flex; gap: var(--space-3); }
+  .footer-social a {
+    width: 40px; height: 40px;
+    border-radius: var(--radius-full);
+    background: var(--color-surface-elevated);
+    border: 1px solid var(--color-border);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-ink-muted);
+    transition: all var(--duration-fast) var(--ease-out-quart);
+  }
+  .footer-social a:hover {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+    transform: translateY(-2px);
+  }
+  .footer-social svg { width: 20px; height: 20px; }
+
+  .footer-nav h3,
+  .footer-contact h3,
+  .footer-apps h3 {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-ink);
+    margin-bottom: var(--space-3);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .footer-nav ul { list-style: none; display: flex; flex-direction: column; gap: var(--space-2); }
+  .footer-nav a { color: var(--color-ink-muted); font-size: var(--text-sm); transition: color var(--duration-fast); }
+  .footer-nav a:hover { color: var(--color-primary); }
+
+  .footer-contact address { font-style: normal; }
+  .footer-contact p { margin: var(--space-1) 0; }
+  .footer-contact a { color: var(--color-ink-muted); font-size: var(--text-sm); transition: color var(--duration-fast); }
+  .footer-contact a:hover { color: var(--color-primary); }
+
+  .app-links { display: flex; flex-direction: column; gap: var(--space-2); }
+  .app-link {
+    display: flex; align-items: center; gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-surface-elevated);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-ink);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    transition: all var(--duration-fast) var(--ease-out-quart);
+  }
+  .app-link:hover { border-color: var(--color-primary); transform: translateX(4px); }
+  .app-link svg { width: 24px; height: 24px; }
+
+  .footer-bottom {
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border);
+    text-align: center;
+  }
+  .footer-bottom p { color: var(--color-ink-subtle); font-size: var(--text-xs); }
+
+  /* ===== Skip Link ===== */
+  .skip-link {
+    position: absolute;
+    top: 0; left: 0;
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-primary);
+    color: white;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    transform: translateY(-100%);
+    z-index: var(--z-toast);
+    transition: transform var(--duration-fast) var(--ease-out-quart);
+  }
+  .skip-link:focus { transform: translateY(0); text-decoration: none; }
+
+  /* ===== Noscript Fallback ===== */
+  .noscript-notice {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-warning);
+    color: var(--color-ink);
+    text-align: center;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    z-index: var(--z-toast);
+  }
+  .noscript-notice p { max-width: none; margin: 0 auto; }
+</style>

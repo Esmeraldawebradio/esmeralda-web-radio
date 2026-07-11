@@ -1,0 +1,99 @@
+---
+/**
+ * 404 Page — Esmeralda Web Rádio
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Página não encontrada - Esmeralda Web Rádio" description="A página que você procura não existe. Volte para a rádio ao vivo.">
+  <main id="main-content">
+    <section class="notfound" aria-labelledby="notfound-title">
+      <div class="container">
+        <div class="notfound-content">
+          <p class="notfound-code" aria-hidden="true">404</p>
+          <h1 id="notfound-title" class="notfound-title">Essa frequência não existe</h1>
+          <p class="notfound-text">
+            A página que você tentou acessar saiu do ar ou nunca existiu.
+            A Esmeralda Web Rádio continua no ar — sintonize e curta a programação.
+          </p>
+          <div class="notfound-actions">
+            <a href="/" class="btn-primary">Voltar ao player</a>
+            <a href="/#programacao" class="btn-secondary">Ver programação</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .notfound {
+    padding: var(--space-20) 0;
+    text-align: center;
+    min-height: calc(100vh - var(--header-height) - var(--player-height));
+    display: flex;
+    align-items: center;
+    background:
+      radial-gradient(ellipse 70% 50% at 50% 0%, oklch(from var(--color-primary) l c h / 0.08), transparent),
+      radial-gradient(ellipse 50% 40% at 100% 100%, oklch(from var(--color-accent) l c h / 0.06), transparent);
+  }
+
+  .notfound-content { max-width: 48rem; margin: 0 auto; }
+
+  .notfound-code {
+    font-family: var(--font-mono);
+    font-size: clamp(4rem, 12vw, 8rem);
+    font-weight: var(--weight-bold);
+    line-height: 1;
+    color: var(--color-primary);
+    letter-spacing: -0.04em;
+    margin-bottom: var(--space-4);
+    opacity: 0.8;
+  }
+
+  .notfound-title {
+    font-size: var(--text-h2);
+    font-weight: var(--weight-bold);
+    color: var(--color-ink);
+    margin-bottom: var(--space-4);
+  }
+
+  .notfound-text {
+    font-size: var(--text-lg);
+    color: var(--color-ink-muted);
+    line-height: var(--leading-relaxed);
+    margin: 0 auto var(--space-8);
+    max-width: 52ch;
+  }
+
+  .notfound-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-3) var(--space-6);
+    border-radius: var(--radius-full);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-base);
+    transition: all var(--duration-base) var(--ease-out-quart);
+  }
+
+  .btn-primary {
+    background: var(--color-primary);
+    color: white;
+  }
+  .btn-primary:hover { background: var(--color-primary-hover); text-decoration: none; transform: translateY(-2px); }
+
+  .btn-secondary {
+    background: var(--color-surface-elevated);
+    border: 1px solid var(--color-border);
+    color: var(--color-ink);
+  }
+  .btn-secondary:hover { border-color: var(--color-primary); color: var(--color-primary); text-decoration: none; transform: translateY(-2px); }
+</style>
