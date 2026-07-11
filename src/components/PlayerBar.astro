@@ -283,10 +283,11 @@ const presenter = Array.isArray(currentProgram.presenters)
     // usamos o Service Worker como proxy (mesma origem, sem CORS).
     const PROXIES = [
       // SW proxy (mesma origem, nao precisa de CORS)
-      (url) => window.location.origin + BASE_PATH + 'proxy-stream',
+      (url) => window.location.origin + BASE_PATH + '/proxy-stream',
       // Proxies externos como fallback
       (url) => 'https://corsproxy.io/?url=' + encodeURIComponent(url),
       (url) => 'https://corsproxy.org/?' + encodeURIComponent(url),
+      (url) => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url),
     ];
     const streamDirect = RAW_STREAM_URL;
     const isHttps = location.protocol === 'https:';
