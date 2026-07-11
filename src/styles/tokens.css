@@ -207,39 +207,6 @@ a:hover { text-decoration: underline; }
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-ink-muted); }
 
-/* ===== Rainbow Animation ===== */
-@keyframes rainbow {
-  0% { --r-h: 0deg; }
-  25% { --r-h: 90deg; }
-  50% { --r-h: 180deg; }
-  75% { --r-h: 270deg; }
-  100% { --r-h: 360deg; }
-}
-@property --r-h { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
-
-.btn-rainbow {
-  --r-h: 0deg;
-  position: relative;
-  border: 2px solid transparent;
-  background-clip: padding-box;
-  border-radius: 9999px;
-  transition: all var(--duration-base) var(--ease-spring);
-}
-.btn-rainbow::before {
-  content: '';
-  position: absolute;
-  inset: -3px;
-  border-radius: 9999px;
-  background: conic-gradient(from var(--r-h), #c06000, #e0a000, #6000a0, #002040, #c06000);
-  z-index: -1;
-  animation: rainbow 4s linear infinite;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  padding: 3px;
-}
-
 /* ===== Glass Effect ===== */
 .glass {
   background: rgba(255,255,255,0.12);
