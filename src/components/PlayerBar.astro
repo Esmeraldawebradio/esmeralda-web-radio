@@ -410,18 +410,23 @@ const presenter = Array.isArray(currentProgram.presenters)
         }
       } else if (retryCount < MAX_RETRIES) {
         retryCount++;
+        // Volta para o primeiro proxy (SW pode ter sido instalado)
         setTimeout(() => {
           if (audio) {
-            setAudioSource(streamUrlIndex);
+            setAudioSource(0);
             audio.load();
             playBtn.click();
           }
         }, 1000 * retryCount);
       } else {
+        // Nada funcionou — mostra erro e tenta stream direto como ultimo caso
         setError(true);
-        setTimeout(() => {
-          document.querySelector('[data-player-bar]')?.classList.add('hidden');
-        }, 5000);
+        console.warn('[PlayerBar] Todos os proxies falharam. Tentando stream direto...');
+        setAudioSource(STREAM_URLS.length - 1);
+        if (audio) {
+          audio.load();
+          audio.play().catch(() => {});
+        }
       }
     }
 

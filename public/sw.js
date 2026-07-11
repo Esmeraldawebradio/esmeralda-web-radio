@@ -79,7 +79,6 @@ self.addEventListener('fetch', (event) => {
 async function proxyStream() {
   try {
     const response = await fetch(STREAM_ORIGIN + '/stream', {
-      headers: { 'Icy-MetaData': '1' },
       mode: 'cors',
     });
 

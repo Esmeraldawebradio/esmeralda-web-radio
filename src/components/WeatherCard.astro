@@ -1,33 +1,8 @@
 ---
-const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-
-function getDayName(offset) {
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  return DAYS[d.getDay()];
-}
-
-function getDateStr(offset) {
-  const d = new Date();
-  d.setDate(d.getDate() + offset);
-  return `${d.getDate()}/${d.getMonth() + 1}`;
-}
-
-const FORECAST = Array.from({ length: 7 }, (_, i) => ({
-  day: getDayName(i),
-  date: getDateStr(i),
-  icon: ["☀️", "⛅", "🌤️", "🌧️", "⛅", "☀️", "🌤️"][i],
-  tempMax: [32, 30, 28, 26, 29, 31, 33][i],
-  tempMin: [22, 21, 20, 19, 21, 22, 23][i],
-  humidity: [55, 62, 70, 78, 65, 58, 52][i],
-  rain: [5, 20, 45, 70, 30, 10, 5][i],
-  condition: [
-    "Ensolarado", "Parcialmente Nublado", "Predomínio de Sol",
-    "Chuvas Isoladas", "Parcialmente Nublado", "Ensolarado", "Predomínio de Sol"
-  ][i]
-}));
-
-const today = FORECAST[0];
+// Coordenadas do Brasil (centro: Brasília). O usuario pode trocar depois.
+const LAT = -15.7934;
+const LON = -47.8822;
+const CITY = "Brasília";
 ---
 
 <section id="clima" class="weather-section" aria-labelledby="weather-title">
@@ -37,59 +12,151 @@ const today = FORECAST[0];
       <p class="section-subtitle">Acompanhe as condições climáticas para os próximos dias</p>
     </header>
 
-    <div class="weather-today glass">
-      <div class="weather-today-main">
-        <span class="weather-icon-today">{today.icon}</span>
-        <div class="weather-today-info">
-          <span class="weather-temp-today">{today.tempMax}°C</span>
-          <span class="weather-condition">{today.condition}</span>
-          <span class="weather-location">📍 Brasil</span>
-        </div>
+    <div id="weather-root" class="weather-root">
+      <div class="weather-loading" aria-label="Carregando previsão do tempo...">
+        <div class="spinner"></div>
+        <span>Carregando previsão...</span>
       </div>
-      <div class="weather-today-details">
-        <div class="weather-detail">
-          <span class="detail-label">Mín</span>
-          <span class="detail-value">{today.tempMin}°C</span>
-        </div>
-        <div class="weather-detail">
-          <span class="detail-label">Máx</span>
-          <span class="detail-value">{today.tempMax}°C</span>
-        </div>
-        <div class="weather-detail">
-          <span class="detail-label">Chuva</span>
-          <span class="detail-value">{today.rain}%</span>
-        </div>
-        <div class="weather-detail">
-          <span class="detail-label">Umidade</span>
-          <span class="detail-value">{today.humidity}%</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="weather-week">
-      {FORECAST.slice(1).map((day) => (
-        <div class="weather-day glass clickable" role="button" tabindex="0">
-          <span class="day-name">{day.day}</span>
-          <span class="day-date">{day.date}</span>
-          <span class="day-icon">{day.icon}</span>
-          <span class="day-temps">
-            <span class="day-max">{day.tempMax}°</span>
-            <span class="day-min">{day.tempMin}°</span>
-          </span>
-          <div class="day-rain-bar" style={`--rain: ${day.rain}%`} aria-label={`Chuva ${day.rain}%`}>
-            <div class="rain-fill"></div>
-          </div>
-          <span class="day-condition">{day.condition}</span>
-        </div>
-      ))}
     </div>
   </div>
 </section>
+
+<script is:inline define:vars={{ WEATHER_LAT: LAT, WEATHER_LON: LON, WEATHER_CITY: CITY }}>
+(async function() {
+  const root = document.getElementById('weather-root');
+  if (!root) return;
+
+  const LAT = WEATHER_LAT;
+  const LON = WEATHER_LON;
+  const CITY = WEATHER_CITY;
+  const DAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const WMO = {
+    0: { icon: '☀️', label: 'Céu limpo' },
+    1: { icon: '🌤️', label: 'Predomínio de sol' },
+    2: { icon: '⛅', label: 'Parcialmente nublado' },
+    3: { icon: '☁️', label: 'Nublado' },
+    45: { icon: '🌫️', label: 'Nevoeiro' },
+    48: { icon: '🌫️', label: 'Nevoeiro' },
+    51: { icon: '🌦️', label: 'Chuva leve' },
+    53: { icon: '🌦️', label: 'Chuva moderada' },
+    55: { icon: '🌧️', label: 'Chuva forte' },
+    61: { icon: '🌧️', label: 'Chuva' },
+    63: { icon: '🌧️', label: 'Chuva moderada' },
+    65: { icon: '🌧️', label: 'Chuva forte' },
+    71: { icon: '🌨️', label: 'Neve' },
+    80: { icon: '🌦️', label: 'Pancadas de chuva' },
+    95: { icon: '⛈️', label: 'Tempestade' },
+  };
+
+  try {
+    const res = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode&timezone=America/Sao_Paulo&forecast_days=8`
+    );
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const days = data.daily;
+
+    function getDayName(offset) {
+      const d = new Date(days.time[offset]);
+      return DAYS[d.getDay()];
+    }
+
+    function getDateStr(offset) {
+      const d = new Date(days.time[offset]);
+      return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`;
+    }
+
+    const forecast = days.time.map((_, i) => ({
+      day: getDayName(i),
+      date: getDateStr(i),
+      code: days.weathercode[i],
+      tempMax: Math.round(days.temperature_2m_max[i]),
+      tempMin: Math.round(days.temperature_2m_min[i]),
+      rain: days.precipitation_probability_max[i] || 0,
+    }));
+
+    const today = forecast[0];
+    const wmo = WMO[today.code] || { icon: '🌤️', label: 'Estável' };
+
+    root.innerHTML = `
+      <div class="weather-today glass">
+        <div class="weather-today-main">
+          <span class="weather-icon-today">${wmo.icon}</span>
+          <div class="weather-today-info">
+            <span class="weather-temp-today">${today.tempMax}°C</span>
+            <span class="weather-condition">${wmo.label}</span>
+            <span class="weather-location">📍 ${CITY}</span>
+          </div>
+        </div>
+        <div class="weather-today-details">
+          <div class="weather-detail">
+            <span class="detail-label">Mín</span>
+            <span class="detail-value">${today.tempMin}°C</span>
+          </div>
+          <div class="weather-detail">
+            <span class="detail-label">Máx</span>
+            <span class="detail-value">${today.tempMax}°C</span>
+          </div>
+          <div class="weather-detail">
+            <span class="detail-label">Chuva</span>
+            <span class="detail-value">${today.rain}%</span>
+          </div>
+        </div>
+      </div>
+      <div class="weather-week">
+        ${forecast.slice(1).map(d => {
+          const w = WMO[d.code] || { icon: '🌤️', label: '' };
+          return `
+            <div class="weather-day glass clickable" role="button" tabindex="0">
+              <span class="day-name">${d.day}</span>
+              <span class="day-date">${d.date}</span>
+              <span class="day-icon">${w.icon}</span>
+              <span class="day-temps">
+                <span class="day-max">${d.tempMax}°</span>
+                <span class="day-min">${d.tempMin}°</span>
+              </span>
+              <div class="day-rain-bar" aria-label="Chuva ${d.rain}%">
+                <div class="rain-fill" style="width:${d.rain}%"></div>
+              </div>
+              <span class="day-condition">${w.label}</span>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  } catch (e) {
+    root.innerHTML = '<p style="text-align:center;color:var(--color-ink-muted);padding:var(--space-8)">Previsão temporariamente indisponível. Tente novamente mais tarde.</p>';
+  }
+})();
+</script>
 
 <style>
   .weather-section {
     padding: var(--space-16) 0;
   }
+
+  .weather-root { min-height: 200px; }
+
+  .weather-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-12);
+    color: var(--color-ink-muted);
+    font-size: var(--text-sm);
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
 
   .weather-today {
     display: flex;
@@ -107,10 +174,7 @@ const today = FORECAST[0];
     gap: var(--space-4);
   }
 
-  .weather-icon-today {
-    font-size: 4rem;
-    line-height: 1;
-  }
+  .weather-icon-today { font-size: 4rem; line-height: 1; }
 
   .weather-today-info {
     display: flex;
@@ -163,7 +227,7 @@ const today = FORECAST[0];
 
   .weather-week {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(7, 1fr);
     gap: var(--space-3);
   }
 
@@ -204,9 +268,7 @@ const today = FORECAST[0];
     color: var(--color-ink-subtle);
   }
 
-  .day-icon {
-    font-size: 2rem;
-  }
+  .day-icon { font-size: 2rem; }
 
   .day-temps {
     display: flex;
@@ -227,7 +289,6 @@ const today = FORECAST[0];
   }
 
   .rain-fill {
-    width: var(--rain);
     height: 100%;
     background: linear-gradient(90deg, #4fc3f7, #1565c0);
     border-radius: 9999px;

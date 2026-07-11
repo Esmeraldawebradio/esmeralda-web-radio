@@ -1,55 +1,4 @@
 ---
-const NEWS = [
-  {
-    region: "Norte",
-    title: "Manaus registra menor nível do Rio Negro em 120 anos",
-    summary: "Secas históricas afetam transporte e comunidades ribeirinhas na Amazônia.",
-    image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&q=80",
-    link: "#"
-  },
-  {
-    region: "Nordeste",
-    title: "Salvador bate recorde de turistas no verão 2026",
-    summary: "Capital baiana recebe mais de 2 milhões de visitantes na alta temporada.",
-    image: "https://images.unsplash.com/photo-1540541338287-41700207dee6?w=600&q=80",
-    link: "#"
-  },
-  {
-    region: "Centro-Oeste",
-    title: "Brasília sedia cúpula internacional do clima",
-    summary: "Líderes mundiais discutem metas ambientais para a próxima década.",
-    image: "https://images.unsplash.com/photo-1574484284002-952d92456975?w=600&q=80",
-    link: "#"
-  },
-  {
-    region: "Sudeste",
-    title: "São Paulo inaugura maior parque linear da América Latina",
-    summary: "Espaço verde de 12km conecta bairros e estimula mobilidade sustentável.",
-    image: "https://images.unsplash.com/photo-1569336415962-a4bd9f18cdb3?w=600&q=80",
-    link: "#"
-  },
-  {
-    region: "Sul",
-    title: "SC lidera geração de energia eólica no país",
-    summary: "Parques offshore prometem dobrar capacidade nos próximos 5 anos.",
-    image: "https://images.unsplash.com/photo-1532601224476-15c79f2f7a51?w=600&q=80",
-    link: "#"
-  },
-  {
-    region: "Nordeste",
-    title: "Recife investe em tecnologia contra enchentes",
-    summary: "Sistema de alerta inteligente usa IA para prever alagamentos.",
-    image: "https://images.unsplash.com/photo-1569154941061-e231b4725ef1?w=600&q=80",
-    link: "#"
-  }
-];
-const REGION_COLORS = {
-  "Norte": "#2d7d46",
-  "Nordeste": "#c06000",
-  "Centro-Oeste": "#e0a000",
-  "Sudeste": "#6000a0",
-  "Sul": "#002040",
-};
 ---
 
 <section id="noticias" class="news-section" aria-labelledby="news-title">
@@ -59,22 +8,83 @@ const REGION_COLORS = {
       <p class="section-subtitle">De Norte a Sul, os principais acontecimentos de cada região</p>
     </header>
 
-    <div class="news-grid">
-      {NEWS.map((item) => (
-        <a href={item.link} class="news-card glass clickable" target="_blank" rel="noopener">
-          <div class="news-image">
-            <img src={item.image} alt={item.title} loading="lazy" />
-            <span class="news-region" style={`background:${REGION_COLORS[item.region]}`}>{item.region}</span>
-          </div>
-          <div class="news-body">
-            <h3 class="news-title">{item.title}</h3>
-            <p class="news-summary">{item.summary}</p>
-          </div>
-        </a>
-      ))}
+    <div id="news-root" class="news-root">
+      <div class="news-loading" aria-label="Carregando notícias...">
+        <div class="spinner"></div>
+        <span>Carregando notícias...</span>
+      </div>
     </div>
   </div>
 </section>
+
+<script is:inline>
+(async function() {
+  const root = document.getElementById('news-root');
+  if (!root) return;
+
+  try {
+    // Notícias via IBGE API (gratuita, HTTPS, sem key)
+    const res = await fetch('https://servicodados.ibge.gov.br/api/v3/noticias/?qtd=6');
+    if (!res.ok) throw new Error('API error');
+    const data = await res.json();
+    const items = data.items || [];
+
+    root.innerHTML = `
+      <div class="news-grid">
+        ${items.map((item, i) => {
+          const imgMatch = item.imagens?.match(/"image_intro":"([^"]+)"/);
+          const image = imgMatch
+            ? 'https://servicodados.ibge.gov.br/api/v3/noticias/' + imgMatch[1].replace(/\\\//g, '/').replace(/^"|"$/g, '')
+            : `https://picsum.photos/seed/news${i}/600/400`;
+          const title = item.titulo || 'Sem título';
+          const intro = item.introducao || '';
+          const link = item.link || '#';
+          const editorias = item.editorias || 'Brasil';
+          const region = editorias.split('/')[0] || 'Brasil';
+
+          return `
+            <a href="${link}" class="news-card glass clickable" target="_blank" rel="noopener">
+              <div class="news-image">
+                <img src="${image}" alt="${title}" loading="lazy" onerror="this.src='https://picsum.photos/seed/fallback${i}/600/400'">
+                <span class="news-region">${region}</span>
+              </div>
+              <div class="news-body">
+                <h3 class="news-title">${title}</h3>
+                <p class="news-summary">${intro}</p>
+              </div>
+            </a>
+          `;
+        }).join('')}
+      </div>
+      <p class="news-footer">Fonte: IBGE Notícias</p>
+    `;
+  } catch (e) {
+    root.innerHTML = `
+      <div class="news-grid">
+        ${[
+          { region: "Norte", title: "Manaus registra menor nível do Rio Negro em 120 anos", summary: "Secas históricas afetam transporte e comunidades ribeirinhas na Amazônia." },
+          { region: "Nordeste", title: "Salvador bate recorde de turistas no verão", summary: "Capital baiana recebe milhões de visitantes na alta temporada." },
+          { region: "Centro-Oeste", title: "Brasília sedia cúpula internacional do clima", summary: "Líderes mundiais discutem metas ambientais para a próxima década." },
+          { region: "Sudeste", title: "São Paulo inaugura maior parque linear da América Latina", summary: "Espaço verde de 12km conecta bairros e estimula mobilidade sustentável." },
+          { region: "Sul", title: "SC lidera geração de energia eólica no país", summary: "Parques offshore prometem dobrar capacidade nos próximos anos." },
+          { region: "Nordeste", title: "Recife investe em tecnologia contra enchentes", summary: "Sistema de alerta inteligente usa IA para prever alagamentos." },
+        ].map((item, i) => `
+          <a href="#" class="news-card glass clickable" target="_blank" rel="noopener">
+            <div class="news-image">
+              <img src="https://picsum.photos/seed/br${i}/600/400" alt="${item.title}" loading="lazy">
+              <span class="news-region">${item.region}</span>
+            </div>
+            <div class="news-body">
+              <h3 class="news-title">${item.title}</h3>
+              <p class="news-summary">${item.summary}</p>
+            </div>
+          </a>
+        `).join('')}
+      </div>
+    `;
+  }
+})();
+</script>
 
 <style>
   .news-section {
@@ -82,10 +92,40 @@ const REGION_COLORS = {
     background: var(--color-surface);
   }
 
+  .news-root { min-height: 200px; }
+
+  .news-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-12);
+    color: var(--color-ink-muted);
+    font-size: var(--text-sm);
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
   .news-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
     gap: var(--space-6);
+  }
+
+  .news-footer {
+    text-align: center;
+    margin-top: var(--space-4);
+    font-size: var(--text-xs);
+    color: var(--color-ink-subtle);
   }
 
   .news-card {
@@ -114,9 +154,7 @@ const REGION_COLORS = {
     object-fit: cover;
     transition: transform var(--duration-slow) var(--ease-out-quart);
   }
-  .news-card:hover .news-image img {
-    transform: scale(1.08);
-  }
+  .news-card:hover .news-image img { transform: scale(1.08); }
 
   .news-region {
     position: absolute;
@@ -129,6 +167,7 @@ const REGION_COLORS = {
     color: white;
     text-transform: uppercase;
     letter-spacing: 0.05em;
+    background: rgba(0,0,0,0.5);
   }
 
   .news-body {
