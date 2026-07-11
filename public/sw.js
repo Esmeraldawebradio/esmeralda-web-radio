@@ -78,19 +78,8 @@ self.addEventListener('fetch', (event) => {
 
 async function proxyStream() {
   try {
-    const response = await fetch(STREAM_ORIGIN + '/stream', {
-      mode: 'cors',
-    });
-
-    const responseHeaders = new Headers(response.headers);
-    responseHeaders.set('Access-Control-Allow-Origin', '*');
-    responseHeaders.set('Content-Type', 'audio/mpeg');
-
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: responseHeaders,
-    });
+    // Retorna o fetch direto — sem new Response() para preservar o streaming
+    return await fetch(STREAM_ORIGIN + '/stream');
   } catch (err) {
     console.error('[SW] Proxy stream error:', err);
     return new Response('Stream unavailable', { status: 502 });
