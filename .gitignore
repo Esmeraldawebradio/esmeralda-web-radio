@@ -33,3 +33,6 @@ Desktop.ini
 .codex/
 
 cookies.txt
+
+# Worker temp
+worker/.wrangler/
