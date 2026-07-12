@@ -32,7 +32,6 @@ export const SCHEDULE = [
   {
     time: "12:00 - 14:00",
     program: "Intervalo Musical",
-    presenter: "Pausa para almoço",
     description: "Intervalo para o público relaxar"
   },
   {
@@ -44,7 +43,7 @@ export const SCHEDULE = [
   {
     time: "16:00 - 18:00",
     program: "Conversa de Domingo",
-    presenter: "Com a Comunidade",
+    presenter: "a Comunidade",
     description: "Conversas informativas com participantes"
   }
 ];
