@@ -1,4 +1,4 @@
-const CACHE = 'esmeralda-v3';
+const CACHE = 'esmeralda-v4';
 const OFFLINE_URL = './404.html';
 const PRECACHE = ['./', './404.html', './manifest.webmanifest', './favicon.svg'];
 
@@ -7,6 +7,12 @@ self.addEventListener('install', (event) => {
     caches.open(CACHE).then((cache) => cache.addAll(PRECACHE)).catch(() => {})
   );
   self.skipWaiting();
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('activate', (event) => {
