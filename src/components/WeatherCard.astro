@@ -1,8 +1,59 @@
 ---
+import { buildCurrentWeather, buildHourlyForecast, buildDailyForecast, getWindDirection } from '../utils/weather';
+
 const LAT = -15.7934;
 const LON = -47.8822;
-const CITY = "Brasília";
-const STATE = "DF";
+
+let serverHTML = '';
+try {
+  const url = 'https://api.open-meteo.com/v1/forecast'
+    + `?latitude=${LAT}&longitude=${LON}`
+    + '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode,wind_speed_10m_max,wind_direction_10m_dominant'
+    + '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weathercode,wind_speed_10m,wind_direction_10m,uv_index'
+    + '&hourly=temperature_2m,precipitation_probability,weathercode'
+    + '&timezone=America/Sao_Paulo&forecast_days=8&wind_speed_unit=kmh';
+
+  const res = await fetch(url);
+  if (res.ok) {
+    const data = await res.json();
+    const daily = data.daily;
+    const current = data.current;
+    const hourly = data.hourly;
+
+    const dailyForecast = daily.time.map((_: any, index: number) => ({
+      dayName: ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][new Date(daily.time[index]).getDay()],
+      date: (() => { const d = new Date(daily.time[index]); return `${String(d.getDate()).padStart(2,'0')} ${['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][d.getMonth()]}`; })(),
+      code: daily.weathercode[index],
+      maxTemp: Math.round(daily.temperature_2m_max[index]),
+      minTemp: Math.round(daily.temperature_2m_min[index]),
+      rainChance: daily.precipitation_probability_max[index] || 0,
+      windSpeed: Math.round(daily.wind_speed_10m_max[index]),
+      windDirection: getWindDirection(daily.wind_direction_10m_dominant[index]),
+    }));
+
+    const now = new Date();
+    const currentHour = now.getHours();
+    const hourlyForecast = [];
+
+    for (let i = 0; i < hourly.time.length; i++) {
+      const hourDate = new Date(hourly.time[i]);
+      if (hourDate.getDate() === now.getDate() && hourDate.getHours() >= currentHour && hourDate.getHours() < currentHour + 8) {
+        hourlyForecast.push({
+          time: String(hourDate.getHours()).padStart(2, '0') + 'h',
+          temperature: Math.round(hourly.temperature_2m[i]),
+          rainChance: hourly.precipitation_probability[i] || 0,
+          code: hourly.weathercode[i],
+        });
+      }
+    }
+
+    serverHTML = buildCurrentWeather(current, dailyForecast[0])
+      + buildHourlyForecast(hourlyForecast)
+      + buildDailyForecast(dailyForecast);
+  }
+} catch (e) {
+  // fallback to client-side
+}
 ---
 
 <section id="clima" class="section-padded" aria-labelledby="weather-title">
@@ -13,601 +64,80 @@ const STATE = "DF";
     </header>
 
     <div id="weather-root" class="weather-root">
-      <div class="loading-root" aria-label="Carregando previsão do tempo...">
-        <div class="spinner"></div>
-        <span>Carregando previsão...</span>
-      </div>
+      {serverHTML ? (
+        <Fragment set:html={serverHTML} />
+      ) : (
+        <>
+          <div class="loading-root" aria-label="Carregando previsão do tempo...">
+            <div class="spinner"></div>
+            <span>Carregando previsão...</span>
+          </div>
+          <script is:inline>
+(function(){const r=document.getElementById('weather-root');if(!r)return;
+const wc={0:{icon:'sun',label:'Céu limpo',gradient:'linear-gradient(135deg,#f5af19,#f12711)'},1:{icon:'sun',label:'Predomínio de sol',gradient:'linear-gradient(135deg,#f5af19,#f12711)'},2:{icon:'cloud-sun',label:'Parcialmente nublado',gradient:'linear-gradient(135deg,#89cff0,#f5af19)'},3:{icon:'cloud',label:'Nublado',gradient:'linear-gradient(135deg,#6b7b8d,#c0c8d0)'},45:{icon:'fog',label:'Nevoeiro',gradient:'linear-gradient(135deg,#8e9eab,#eef2f3)'},48:{icon:'fog',label:'Nevoeiro',gradient:'linear-gradient(135deg,#8e9eab,#eef2f3)'},51:{icon:'drizzle',label:'Chuva leve',gradient:'linear-gradient(135deg,#4b6cb7,#6b93d6)'},53:{icon:'drizzle',label:'Chuva moderada',gradient:'linear-gradient(135deg,#3a5a9f,#5a7fc0)'},55:{icon:'rain',label:'Chuva forte',gradient:'linear-gradient(135deg,#2a4a8f,#4a6fb0)'},61:{icon:'rain',label:'Chuva',gradient:'linear-gradient(135deg,#2a4a8f,#4a6fb0)'},63:{icon:'rain',label:'Chuva moderada',gradient:'linear-gradient(135deg,#1a3a7f,#3a5fa0)'},65:{icon:'rain-heavy',label:'Chuva forte',gradient:'linear-gradient(135deg,#0a2a6f,#2a4f90)'},71:{icon:'snow',label:'Neve',gradient:'linear-gradient(135deg,#b8c6db,#f5f7fa)'},80:{icon:'rain',label:'Pancadas de chuva',gradient:'linear-gradient(135deg,#2a4a8f,#6b93d6)'},95:{icon:'storm',label:'Tempestade',gradient:'linear-gradient(135deg,#141e30,#243b55)'}};
+function gw(code){return wc[code]||wc[0]}
+const si={sun:'<circle cx="32" cy="32" r="14" fill="#FFD700" stroke="#FFA500" stroke-width="2"/><g stroke="#FFD700" stroke-width="3" stroke-linecap="round"><line x1="32" y1="4" x2="32" y2="12"/><line x1="32" y1="52" x2="32" y2="60"/><line x1="60" y1="32" x2="52" y2="32"/><line x1="12" y1="32" x2="4" y2="32"/><line x1="48.5" y1="15.5" x2="42.5" y2="21.5"/><line x1="21.5" y1="42.5" x2="15.5" y2="48.5"/><line x1="48.5" y1="48.5" x2="42.5" y2="42.5"/><line x1="21.5" y1="21.5" x2="15.5" y2="15.5"/></g>','cloud-sun':'<circle cx="26" cy="24" r="9" fill="#FFD700" stroke="#FFA500" stroke-width="2"/><path d="M16 44h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#E0E8F0" stroke="#B0C0D0" stroke-width="2"/>',cloud:'<path d="M14 44h36a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#D0D8E0" stroke="#A0B0C0" stroke-width="2"/>',fog:'<g stroke="#B0C0D0" stroke-width="3" stroke-linecap="round"><line x1="12" y1="24" x2="52" y2="24"/><line x1="16" y1="32" x2="48" y2="32"/><line x1="12" y1="40" x2="52" y2="40"/></g>',drizzle:'<path d="M16 36h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#C0D0E0" stroke="#90A8C0" stroke-width="2"/><g stroke="#4A8AFF" stroke-width="2" stroke-linecap="round"><line x1="22" y1="42" x2="20" y2="48"/><line x1="32" y1="42" x2="30" y2="48"/><line x1="42" y1="42" x2="40" y2="48"/></g>',rain:'<path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#A0B8D0" stroke="#7090B0" stroke-width="2"/><g stroke="#4A7AFF" stroke-width="2" stroke-linecap="round"><line x1="20" y1="40" x2="16" y2="50"/><line x1="30" y1="40" x2="26" y2="50"/><line x1="40" y1="40" x2="36" y2="50"/><line x1="50" y1="40" x2="46" y2="50"/></g>','rain-heavy':'<path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#8098B0" stroke="#507090" stroke-width="2"/><g stroke="#3A6AEF" stroke-width="3" stroke-linecap="round"><line x1="20" y1="40" x2="14" y2="52"/><line x1="30" y1="40" x2="24" y2="52"/><line x1="40" y1="40" x2="34" y2="52"/><line x1="50" y1="40" x2="44" y2="52"/></g>',snow:'<path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#E8EEF4" stroke="#C0D0E0" stroke-width="2"/><g fill="#B0C8E0"><circle cx="20" cy="42" r="2"/><circle cx="30" cy="48" r="2"/><circle cx="40" cy="42" r="2"/><circle cx="50" cy="48" r="2"/></g>',storm:'<path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#506080" stroke="#304060" stroke-width="2"/><g stroke="#FFD700" stroke-width="2"><polyline points="34,36 28,44 36,44 28,52" fill="#FFD700"/></g>'};
+function rwi(n){return '<svg viewBox="0 0 64 64" fill="none" class="weather-svg-icon">'+(si[n]||si.sun)+'</svg>';}
+function gwd(d){return(['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'])[Math.round(d/22.5)%16];}
+function uvl(i){return i>=8?'Extremo':i>=6?'Alto':i>=3?'Moderado':'Baixo';}
+async function load(){const d=[1000,1500,2500,4000];for(let a=0;a<5;a++){try{const p=await fetch('https://api.open-meteo.com/v1/forecast?latitude=-15.7934&longitude=-47.8822&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode,wind_speed_10m_max,wind_direction_10m_dominant&current=temperature_2m,relative_humidity_2m,apparent_temperature,weathercode,wind_speed_10m,wind_direction_10m,uv_index&hourly=temperature_2m,precipitation_probability,weathercode&timezone=America/Sao_Paulo&forecast_days=8&wind_speed_unit=kmh');if(!p.ok)throw Error();const j=await p.json(),dl=j.daily,cu=j.current,hr=j.hourly;
+const df=dl.time.map((_,i)=>({dayName:['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][new Date(dl.time[i]).getDay()],date:((d)=>{const x=new Date(d);return String(x.getDate()).padStart(2,'0')+' '+['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][x.getMonth()]})(dl.time[i]),code:dl.weathercode[i],maxTemp:Math.round(dl.temperature_2m_max[i]),minTemp:Math.round(dl.temperature_2m_min[i]),rainChance:dl.precipitation_probability_max[i]||0,windSpeed:Math.round(dl.wind_speed_10m_max[i]),windDirection:gwd(dl.wind_direction_10m_dominant[i])}));
+const hn=new Date(),ch=hn.getHours(),hf=[];for(let i=0;i<hr.time.length;i++){const hd=new Date(hr.time[i]);if(hd.getDate()===hn.getDate()&&hd.getHours()>=ch&&hd.getHours()<ch+8){hf.push({time:String(hd.getHours()).padStart(2,'0')+'h',temperature:Math.round(hr.temperature_2m[i]),rainChance:hr.precipitation_probability[i]||0,code:hr.weathercode[i]});}}
+const cw=gw(cu.weathercode);
+r.innerHTML='<div class="weather-current-section" style="--weather-gradient:'+cw.gradient+'"><div class="weather-current-section__overlay"></div><div class="weather-current-main"><div class="weather-current-icon-wrapper">'+rwi(cw.icon)+'</div><div class="weather-current-info"><div class="weather-current-temperature">'+cu.temperature_2m+'°C</div><div class="weather-current-feels-like">Sensação '+cu.apparent_temperature+'°C</div><div class="weather-current-condition">'+cw.label+'</div><div class="weather-current-location">Brasília, DF</div></div></div><div class="weather-current-details"><div class="weather-detail"><span class="weather-detail__label">Umidade</span><span class="weather-detail__value">'+cu.relative_humidity_2m+'%</span></div><div class="weather-detail"><span class="weather-detail__label">Vento</span><span class="weather-detail__value">'+cu.wind_speed_10m+' <small>km/h</small></span><span class="weather-detail__sub">'+gwd(cu.wind_direction_10m)+'</span></div><div class="weather-detail"><span class="weather-detail__label">UV</span><span class="weather-detail__value">'+cu.uv_index+'</span><span class="weather-detail__sub">'+uvl(cu.uv_index)+'</span></div><div class="weather-detail"><span class="weather-detail__label">Máx / Mín</span><span class="weather-detail__value">'+df[0].maxTemp+'° / '+df[0].minTemp+'°</span></div></div></div><div class="weather-hourly-section">'+hf.map(h=>{const w=gw(h.code);return '<div class="weather-hourly-item"><span class="weather-hourly-item__time">'+h.time+'</span>'+rwi(w.icon)+'<span class="weather-hourly-item__temp">'+h.temperature+'°</span><span class="weather-hourly-item__rain">'+h.rainChance+'%</span></div>'}).join('')+'</div><div class="weather-daily-grid">'+df.map((d,i)=>{const w=gw(d.code);return '<div class="weather-daily-card'+(i===0?' weather-daily-card--today':'')+'"><span class="weather-daily-card__name">'+(i===0?'Hoje':d.dayName)+'</span><span class="weather-daily-card__date">'+d.date+'</span><div class="weather-daily-card__icon">'+rwi(w.icon)+'</div><span class="weather-daily-card__condition">'+w.label+'</span><div class="weather-daily-card__temps"><span class="weather-daily-card__temp-max">'+d.maxTemp+'°</span><span class="weather-daily-card__temp-sep">/</span><span class="weather-daily-card__temp-min">'+d.minTemp+'°</span></div><div class="weather-daily-card__extras"><span class="weather-daily-card__rain'+(d.rainChance>0?' weather-daily-card__rain--active':'')+'"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor"><path d="M4 6a4 4 0 1 1 8 0c0 2.5-2 5-4 7-2-2-4-4.5-4-7z"/></svg>'+d.rainChance+'%</span><span class="weather-daily-card__wind"><svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor"><path d="M1 8h11.5a2.5 2.5 0 0 0 0-5h-.5m-4 10h5.5a2.5 2.5 0 0 0 0-5H13"/></svg>'+d.windSpeed+' '+d.windDirection+'</span></div></div>'}).join('')+'</div>';return;}catch(e){if(a<4)await new Promise(r=>setTimeout(r,d[a]));}}r.innerHTML='<p class="weather-error">Previsão temporariamente indisponível.</p>';}
+load();})();
+          </script>
+        </>
+      )}
     </div>
   </div>
 </section>
 
-<script is:inline define:vars={{ WEATHER_LAT: LAT, WEATHER_LON: LON, WEATHER_CITY: CITY, WEATHER_STATE: STATE }}>
-(function() {
-  const root = document.getElementById('weather-root');
-  if (!root) return;
-
-  const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-  const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-
-  // ===== WMO Weather Codes =====
-  const weatherConditions = {
-    0:  { icon: 'sun',        label: 'Céu limpo',          gradient: 'linear-gradient(135deg, #f5af19, #f12711)' },
-    1:  { icon: 'sun',        label: 'Predomínio de sol',  gradient: 'linear-gradient(135deg, #f5af19, #f12711)' },
-    2:  { icon: 'cloud-sun',  label: 'Parcialmente nublado',gradient: 'linear-gradient(135deg, #89cff0, #f5af19)' },
-    3:  { icon: 'cloud',      label: 'Nublado',            gradient: 'linear-gradient(135deg, #6b7b8d, #c0c8d0)' },
-    45: { icon: 'fog',        label: 'Nevoeiro',           gradient: 'linear-gradient(135deg, #8e9eab, #eef2f3)' },
-    48: { icon: 'fog',        label: 'Nevoeiro',           gradient: 'linear-gradient(135deg, #8e9eab, #eef2f3)' },
-    51: { icon: 'drizzle',    label: 'Chuva leve',         gradient: 'linear-gradient(135deg, #4b6cb7, #6b93d6)' },
-    53: { icon: 'drizzle',    label: 'Chuva moderada',     gradient: 'linear-gradient(135deg, #3a5a9f, #5a7fc0)' },
-    55: { icon: 'rain',       label: 'Chuva forte',        gradient: 'linear-gradient(135deg, #2a4a8f, #4a6fb0)' },
-    61: { icon: 'rain',       label: 'Chuva',              gradient: 'linear-gradient(135deg, #2a4a8f, #4a6fb0)' },
-    63: { icon: 'rain',       label: 'Chuva moderada',     gradient: 'linear-gradient(135deg, #1a3a7f, #3a5fa0)' },
-    65: { icon: 'rain-heavy', label: 'Chuva forte',        gradient: 'linear-gradient(135deg, #0a2a6f, #2a4f90)' },
-    71: { icon: 'snow',       label: 'Neve',               gradient: 'linear-gradient(135deg, #b8c6db, #f5f7fa)' },
-    80: { icon: 'rain',       label: 'Pancadas de chuva',  gradient: 'linear-gradient(135deg, #2a4a8f, #6b93d6)' },
-    95: { icon: 'storm',      label: 'Tempestade',         gradient: 'linear-gradient(135deg, #141e30, #243b55)' },
-  };
-
-  function getWeather(code) {
-    return weatherConditions[code] || weatherConditions[0];
-  }
-
-  // ===== SVG Icons =====
-  function renderWeatherIcon(iconName) {
-    const icons = {
-      sun: `
-        <circle cx="32" cy="32" r="14" fill="#FFD700" stroke="#FFA500" stroke-width="2"/>
-        <g stroke="#FFD700" stroke-width="3" stroke-linecap="round">
-          <line x1="32" y1="4" x2="32" y2="12"/>
-          <line x1="32" y1="52" x2="32" y2="60"/>
-          <line x1="60" y1="32" x2="52" y2="32"/>
-          <line x1="12" y1="32" x2="4" y2="32"/>
-          <line x1="48.5" y1="15.5" x2="42.5" y2="21.5"/>
-          <line x1="21.5" y1="42.5" x2="15.5" y2="48.5"/>
-          <line x1="48.5" y1="48.5" x2="42.5" y2="42.5"/>
-          <line x1="21.5" y1="21.5" x2="15.5" y2="15.5"/>
-        </g>`,
-
-      'cloud-sun': `
-        <circle cx="26" cy="24" r="9" fill="#FFD700" stroke="#FFA500" stroke-width="2"/>
-        <path d="M16 44h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z"
-          fill="#E0E8F0" stroke="#B0C0D0" stroke-width="2"/>`,
-
-      cloud: `
-        <path d="M14 44h36a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z"
-          fill="#D0D8E0" stroke="#A0B0C0" stroke-width="2"/>`,
-
-      fog: `
-        <g stroke="#B0C0D0" stroke-width="3" stroke-linecap="round">
-          <line x1="12" y1="24" x2="52" y2="24"/>
-          <line x1="16" y1="32" x2="48" y2="32"/>
-          <line x1="12" y1="40" x2="52" y2="40"/>
-        </g>`,
-
-      drizzle: `
-        <path d="M16 36h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z"
-          fill="#C0D0E0" stroke="#90A8C0" stroke-width="2"/>
-        <g stroke="#4A8AFF" stroke-width="2" stroke-linecap="round">
-          <line x1="22" y1="42" x2="20" y2="48"/>
-          <line x1="32" y1="42" x2="30" y2="48"/>
-          <line x1="42" y1="42" x2="40" y2="48"/>
-        </g>`,
-
-      rain: `
-        <path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z"
-          fill="#A0B8D0" stroke="#7090B0" stroke-width="2"/>
-        <g stroke="#4A7AFF" stroke-width="2" stroke-linecap="round">
-          <line x1="20" y1="40" x2="16" y2="50"/>
-          <line x1="30" y1="40" x2="26" y2="50"/>
-          <line x1="40" y1="40" x2="36" y2="50"/>
-          <line x1="50" y1="40" x2="46" y2="50"/>
-        </g>`,
-
-      'rain-heavy': `
-        <path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z"
-          fill="#8098B0" stroke="#507090" stroke-width="2"/>
-        <g stroke="#3A6AEF" stroke-width="3" stroke-linecap="round">
-          <line x1="20" y1="40" x2="14" y2="52"/>
-          <line x1="30" y1="40" x2="24" y2="52"/>
-          <line x1="40" y1="40" x2="34" y2="52"/>
-          <line x1="50" y1="40" x2="44" y2="52"/>
-        </g>`,
-
-      snow: `
-        <path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z"
-          fill="#E8EEF4" stroke="#C0D0E0" stroke-width="2"/>
-        <g fill="#B0C8E0">
-          <circle cx="20" cy="42" r="2"/>
-          <circle cx="30" cy="48" r="2"/>
-          <circle cx="40" cy="42" r="2"/>
-          <circle cx="50" cy="48" r="2"/>
-        </g>`,
-
-      storm: `
-        <path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z"
-          fill="#506080" stroke="#304060" stroke-width="2"/>
-        <g stroke="#FFD700" stroke-width="2">
-          <polyline points="34,36 28,44 36,44 28,52" fill="#FFD700"/>
-        </g>`,
-    };
-
-    const content = icons[iconName] || icons.sun;
-    return `<svg viewBox="0 0 64 64" fill="none" class="weather-svg-icon">${content}</svg>`;
-  }
-
-  // ===== Utilitários =====
-  function getWindDirection(degrees) {
-    const directions = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
-    return directions[Math.round(degrees / 22.5) % 16];
-  }
-
-  function getUVLabel(index) {
-    if (index >= 8) return 'Extremo';
-    if (index >= 6) return 'Alto';
-    if (index >= 3) return 'Moderado';
-    return 'Baixo';
-  }
-
-  function getDayName(dateString) {
-    return days[new Date(dateString).getDay()];
-  }
-
-  function formatDate(dateString) {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = months[date.getMonth()];
-    return `${day} ${month}`;
-  }
-
-  // ===== Construção do HTML =====
-  function buildCurrentWeather(current, today) {
-    const weather = getWeather(current.weathercode);
-    return `
-      <div class="weather-current-section" style="--weather-gradient: ${weather.gradient}">
-        <div class="weather-current-section__overlay"></div>
-
-        <div class="weather-current-main">
-          <div class="weather-current-icon-wrapper">
-            ${renderWeatherIcon(weather.icon)}
-          </div>
-          <div class="weather-current-info">
-            <div class="weather-current-temperature">${current.temperature_2m}°C</div>
-            <div class="weather-current-feels-like">Sensação ${current.apparent_temperature}°C</div>
-            <div class="weather-current-condition">${weather.label}</div>
-            <div class="weather-current-location">${CITY}, ${STATE}</div>
-          </div>
-        </div>
-
-        <div class="weather-current-details">
-          <div class="weather-detail">
-            <span class="weather-detail__label">Umidade</span>
-            <span class="weather-detail__value">${current.relative_humidity_2m}%</span>
-          </div>
-          <div class="weather-detail">
-            <span class="weather-detail__label">Vento</span>
-            <span class="weather-detail__value">${current.wind_speed_10m} <small>km/h</small></span>
-            <span class="weather-detail__sub">${getWindDirection(current.wind_direction_10m)}</span>
-          </div>
-          <div class="weather-detail">
-            <span class="weather-detail__label">UV</span>
-            <span class="weather-detail__value">${current.uv_index}</span>
-            <span class="weather-detail__sub">${getUVLabel(current.uv_index)}</span>
-          </div>
-          <div class="weather-detail">
-            <span class="weather-detail__label">Máx / Mín</span>
-            <span class="weather-detail__value">${today.maxTemp}° / ${today.minTemp}°</span>
-          </div>
-        </div>
-      </div>`;
-  }
-
-  function buildHourlyForecast(hourlyData) {
-    if (!hourlyData.length) return '';
-    return `
-      <div class="weather-hourly-section">
-        ${hourlyData.map(h => {
-          const weather = getWeather(h.code);
-          return `
-            <div class="weather-hourly-item">
-              <span class="weather-hourly-item__time">${h.time}</span>
-              ${renderWeatherIcon(weather.icon)}
-              <span class="weather-hourly-item__temp">${h.temperature}°</span>
-              <span class="weather-hourly-item__rain">${h.rainChance}%</span>
-            </div>`;
-        }).join('')}
-      </div>`;
-  }
-
-  function buildDailyForecast(forecastData) {
-    return `
-      <div class="weather-daily-grid">
-        ${forecastData.map((day, index) => {
-          const weather = getWeather(day.code);
-          const isToday = index === 0;
-          return `
-            <div class="weather-daily-card ${isToday ? 'weather-daily-card--today' : ''}">
-              <span class="weather-daily-card__name">${isToday ? 'Hoje' : day.dayName}</span>
-              <span class="weather-daily-card__date">${day.date}</span>
-              <div class="weather-daily-card__icon">${renderWeatherIcon(weather.icon)}</div>
-              <span class="weather-daily-card__condition">${weather.label}</span>
-              <div class="weather-daily-card__temps">
-                <span class="weather-daily-card__temp-max">${day.maxTemp}°</span>
-                <span class="weather-daily-card__temp-sep">/</span>
-                <span class="weather-daily-card__temp-min">${day.minTemp}°</span>
-              </div>
-              <div class="weather-daily-card__extras">
-                <span class="weather-daily-card__rain ${day.rainChance > 0 ? 'weather-daily-card__rain--active' : ''}">
-                  <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
-                    <path d="M4 6a4 4 0 1 1 8 0c0 2.5-2 5-4 7-2-2-4-4.5-4-7z"/>
-                  </svg>
-                  ${day.rainChance}%
-                </span>
-                <span class="weather-daily-card__wind">
-                  <svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor">
-                    <path d="M1 8h11.5a2.5 2.5 0 0 0 0-5h-.5m-4 10h5.5a2.5 2.5 0 0 0 0-5H13"/>
-                  </svg>
-                  ${day.windSpeed} ${day.windDirection}
-                </span>
-              </div>
-            </div>`;
-        }).join('')}
-      </div>`;
-  }
-
-  // ===== Carregamento dos dados =====
-  async function loadWeatherData() {
-    const delays = [1000, 1500, 2500, 4000];
-    for (let attempt = 0; attempt < 5; attempt++) {
-      try {
-        const url = 'https://api.open-meteo.com/v1/forecast'
-          + `?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}`
-          + '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode,wind_speed_10m_max,wind_direction_10m_dominant'
-          + '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weathercode,wind_speed_10m,wind_direction_10m,uv_index'
-          + '&hourly=temperature_2m,precipitation_probability,weathercode'
-          + '&timezone=America/Sao_Paulo&forecast_days=8&wind_speed_unit=kmh';
-
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Falha ao carregar dados meteorológicos');
-
-        const data = await response.json();
-        const daily = data.daily;
-        const current = data.current;
-        const hourly = data.hourly;
-
-        // Dados diários
-        const dailyForecast = daily.time.map((_, index) => ({
-          dayName: getDayName(daily.time[index]),
-          date: formatDate(daily.time[index]),
-          code: daily.weathercode[index],
-          maxTemp: Math.round(daily.temperature_2m_max[index]),
-          minTemp: Math.round(daily.temperature_2m_min[index]),
-          rainChance: daily.precipitation_probability_max[index] || 0,
-          windSpeed: Math.round(daily.wind_speed_10m_max[index]),
-          windDirection: getWindDirection(daily.wind_direction_10m_dominant[index]),
-        }));
-
-        // Dados horários (próximas 8 horas)
-        const now = new Date();
-        const currentHour = now.getHours();
-        const hourlyForecast = [];
-
-        for (let i = 0; i < hourly.time.length; i++) {
-          const hourDate = new Date(hourly.time[i]);
-          const matchesToday = hourDate.getDate() === now.getDate();
-          const isWithinRange = hourDate.getHours() >= currentHour && hourDate.getHours() < currentHour + 8;
-
-          if (isWithinRange && matchesToday) {
-            hourlyForecast.push({
-              time: String(hourDate.getHours()).padStart(2, '0') + 'h',
-              temperature: Math.round(hourly.temperature_2m[i]),
-              rainChance: hourly.precipitation_probability[i] || 0,
-              code: hourly.weathercode[i],
-            });
-          }
-        }
-
-        // Montagem do HTML
-        root.innerHTML = `
-          ${buildCurrentWeather(current, dailyForecast[0])}
-          ${buildHourlyForecast(hourlyForecast)}
-          ${buildDailyForecast(dailyForecast)}`;
-        return;
-
-      } catch (error) {
-        if (attempt < 4) await new Promise(r => setTimeout(r, delays[attempt]));
-      }
-    }
-    root.innerHTML = '<p class="weather-error">Previsão temporariamente indisponível.</p>';
-  }
-
-  loadWeatherData();
-})();
-</script>
-
 <style>
-  .weather-root {
-    min-height: 200px;
-  }
-
-  .weather-error {
-    text-align: center;
-    color: var(--color-ink-muted);
-    padding: var(--space-8);
-  }
-
-  /* ===== Card Principal (Agora) ===== */
-  .weather-current-section {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: var(--space-8);
-    gap: var(--space-8);
-    margin-bottom: var(--space-6);
-    border-radius: var(--radius-lg);
-    background: var(--weather-gradient);
-    overflow: hidden;
-  }
-
-  .weather-current-section__overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1));
-    pointer-events: none;
-  }
-
-  .weather-current-section > * {
-    position: relative;
-    z-index: 1;
-  }
-
-  @media (max-width: 768px) {
-    .weather-current-section {
-      flex-direction: column;
-      text-align: center;
-    }
-  }
-
-  .weather-current-main {
-    display: flex;
-    align-items: center;
-    gap: var(--space-6);
-  }
-
-  @media (max-width: 768px) {
-    .weather-current-main {
-      flex-direction: column;
-    }
-  }
-
-  .weather-current-icon-wrapper .weather-svg-icon {
-    width: 80px;
-    height: 80px;
-    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
-  }
-
-  .weather-current-info {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .weather-current-temperature {
-    font-size: 4rem;
-    font-weight: var(--weight-bold);
-    color: white;
-    line-height: 1;
-    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  }
-
-  .weather-current-feels-like {
-    font-size: var(--text-base);
-    color: rgba(255,255,255,0.8);
-    margin-top: 2px;
-  }
-
-  .weather-current-condition {
-    font-size: var(--text-lg);
-    color: white;
-    font-weight: var(--weight-semibold);
-    margin-top: var(--space-1);
-  }
-
-  .weather-current-location {
-    font-size: var(--text-sm);
-    color: rgba(255,255,255,0.7);
-  }
-
-  .weather-current-details {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-3);
-  }
-
-  .weather-detail {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: rgba(255,255,255,0.15);
-    backdrop-filter: blur(4px);
-    border-radius: var(--radius-md);
-    padding: var(--space-2) var(--space-3);
-  }
-
-  .weather-detail__label {
-    font-size: var(--text-xs);
-    color: rgba(255,255,255,0.7);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .weather-detail__value {
-    font-size: var(--text-lg);
-    font-weight: var(--weight-bold);
-    color: white;
-  }
-
-  .weather-detail__value small {
-    font-size: var(--text-sm);
-    font-weight: var(--weight-normal);
-  }
-
-  .weather-detail__sub {
-    font-size: var(--text-xs);
-    color: rgba(255,255,255,0.7);
-  }
-
-  /* ===== Previsão Horária ===== */
-  .weather-hourly-section {
-    display: flex;
-    gap: var(--space-4);
-    overflow-x: auto;
-    padding: var(--space-4) var(--space-8);
-    margin-bottom: var(--space-6);
-    background: var(--color-surface-elevated);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    scrollbar-width: thin;
-  }
-
-  .weather-hourly-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    min-width: 56px;
-    flex-shrink: 0;
-  }
-
-  .weather-hourly-item .weather-svg-icon {
-    width: 28px;
-    height: 28px;
-  }
-
-  .weather-hourly-item__time {
-    font-size: var(--text-xs);
-    color: var(--color-ink-muted);
-    font-weight: var(--weight-medium);
-  }
-
-  .weather-hourly-item__temp {
-    font-size: var(--text-sm);
-    font-weight: var(--weight-bold);
-    color: var(--color-ink);
-  }
-
-  .weather-hourly-item__rain {
-    font-size: 10px;
-    color: #4a8aff;
-    font-weight: var(--weight-medium);
-  }
-
-  /* ===== Previsão Diária (8 dias) ===== */
-  .weather-daily-grid {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    gap: var(--space-3);
-  }
-
-  @media (max-width: 768px) {
-    .weather-daily-grid {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-
-  @media (max-width: 480px) {
-    .weather-daily-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-
-  .weather-daily-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: var(--space-1);
-    padding: var(--space-4);
-    text-align: center;
-    background: var(--color-surface-elevated);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    transition: all var(--duration-base) var(--ease-spring);
-  }
-
-  .weather-daily-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-  }
-
-  .weather-daily-card--today {
-    border-color: var(--color-primary);
-    background: rgba(192,96,0,0.06);
-  }
-
-  .weather-daily-card__name {
-    font-size: var(--text-sm);
-    font-weight: var(--weight-bold);
-    color: var(--color-ink);
-    text-transform: uppercase;
-  }
-
-  .weather-daily-card__date {
-    font-size: var(--text-xs);
-    color: var(--color-ink-subtle);
-  }
-
-  .weather-daily-card__icon .weather-svg-icon {
-    width: 36px;
-    height: 36px;
-  }
-
-  .weather-daily-card__condition {
-    font-size: 11px;
-    color: var(--color-ink-muted);
-    line-height: 1.2;
-    min-height: 2.4em;
-    display: flex;
-    align-items: center;
-  }
-
-  .weather-daily-card__temps {
-    display: flex;
-    gap: var(--space-1);
-    font-size: var(--text-sm);
-    font-weight: var(--weight-semibold);
-  }
-
-  .weather-daily-card__temp-max {
-    color: var(--color-primary);
-  }
-
+  .weather-root { min-height: 200px; }
+  .weather-error { text-align: center; color: var(--color-ink-muted); padding: var(--space-8); }
+  .weather-current-section { position: relative; display: flex; align-items: center; justify-content: space-between; padding: var(--space-8); gap: var(--space-8); margin-bottom: var(--space-6); border-radius: var(--radius-lg); background: var(--weather-gradient); overflow: hidden; }
+  .weather-current-section__overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1)); pointer-events: none; }
+  .weather-current-section > * { position: relative; z-index: 1; }
+  @media (max-width: 768px) { .weather-current-section { flex-direction: column; text-align: center; } }
+  .weather-current-main { display: flex; align-items: center; gap: var(--space-6); }
+  @media (max-width: 768px) { .weather-current-main { flex-direction: column; } }
+  .weather-current-icon-wrapper .weather-svg-icon { width: 80px; height: 80px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2)); }
+  .weather-current-info { display: flex; flex-direction: column; }
+  .weather-current-temperature { font-size: 4rem; font-weight: var(--weight-bold); color: white; line-height: 1; text-shadow: 0 2px 8px rgba(0,0,0,0.3); }
+  .weather-current-feels-like { font-size: var(--text-base); color: rgba(255,255,255,0.8); margin-top: 2px; }
+  .weather-current-condition { font-size: var(--text-lg); color: white; font-weight: var(--weight-semibold); margin-top: var(--space-1); }
+  .weather-current-location { font-size: var(--text-sm); color: rgba(255,255,255,0.7); }
+  .weather-current-details { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+  .weather-detail { display: flex; flex-direction: column; align-items: center; background: rgba(255,255,255,0.15); backdrop-filter: blur(4px); border-radius: var(--radius-md); padding: var(--space-2) var(--space-3); }
+  .weather-detail__label { font-size: var(--text-xs); color: rgba(255,255,255,0.7); text-transform: uppercase; letter-spacing: 0.05em; }
+  .weather-detail__value { font-size: var(--text-lg); font-weight: var(--weight-bold); color: white; }
+  .weather-detail__value small { font-size: var(--text-sm); font-weight: var(--weight-normal); }
+  .weather-detail__sub { font-size: var(--text-xs); color: rgba(255,255,255,0.7); }
+  .weather-hourly-section { display: flex; gap: var(--space-4); overflow-x: auto; padding: var(--space-4) var(--space-8); margin-bottom: var(--space-6); background: var(--color-surface-elevated); border: 1px solid var(--color-border); border-radius: var(--radius-lg); scrollbar-width: thin; }
+  .weather-hourly-item { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 56px; flex-shrink: 0; }
+  .weather-hourly-item .weather-svg-icon { width: 28px; height: 28px; }
+  .weather-hourly-item__time { font-size: var(--text-xs); color: var(--color-ink-muted); font-weight: var(--weight-medium); }
+  .weather-hourly-item__temp { font-size: var(--text-sm); font-weight: var(--weight-bold); color: var(--color-ink); }
+  .weather-hourly-item__rain { font-size: 10px; color: #4a8aff; font-weight: var(--weight-medium); }
+  .weather-daily-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: var(--space-3); }
+  @media (max-width: 768px) { .weather-daily-grid { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 480px) { .weather-daily-grid { grid-template-columns: repeat(2, 1fr); } }
+  .weather-daily-card { display: flex; flex-direction: column; align-items: center; gap: var(--space-1); padding: var(--space-4); text-align: center; background: var(--color-surface-elevated); border: 1px solid var(--color-border); border-radius: var(--radius-lg); transition: all var(--duration-base) var(--ease-spring); }
+  .weather-daily-card:hover { transform: translateY(-4px); box-shadow: 0 8px 30px rgba(0,0,0,0.12); }
+  .weather-daily-card--today { border-color: var(--color-primary); background: rgba(192,96,0,0.06); }
+  .weather-daily-card__name { font-size: var(--text-sm); font-weight: var(--weight-bold); color: var(--color-ink); text-transform: uppercase; }
+  .weather-daily-card__date { font-size: var(--text-xs); color: var(--color-ink-subtle); }
+  .weather-daily-card__icon .weather-svg-icon { width: 36px; height: 36px; }
+  .weather-daily-card__condition { font-size: 11px; color: var(--color-ink-muted); line-height: 1.2; min-height: 2.4em; display: flex; align-items: center; }
+  .weather-daily-card__temps { display: flex; gap: var(--space-1); font-size: var(--text-sm); font-weight: var(--weight-semibold); }
+  .weather-daily-card__temp-max { color: var(--color-primary); }
   .weather-daily-card__temp-sep,
-  .weather-daily-card__temp-min {
-    color: var(--color-ink-subtle);
-  }
-
-  .weather-daily-card__extras {
-    display: flex;
-    gap: var(--space-2);
-    font-size: 11px;
-    color: var(--color-ink-subtle);
-    align-items: center;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
+  .weather-daily-card__temp-min { color: var(--color-ink-subtle); }
+  .weather-daily-card__extras { display: flex; gap: var(--space-2); font-size: 11px; color: var(--color-ink-subtle); align-items: center; flex-wrap: wrap; justify-content: center; }
   .weather-daily-card__rain,
-  .weather-daily-card__wind {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-  }
-
+  .weather-daily-card__wind { display: inline-flex; align-items: center; gap: 2px; }
   .weather-daily-card__rain svg,
-  .weather-daily-card__wind svg {
-    opacity: 0.6;
-  }
-
-  .weather-daily-card__rain--active {
-    color: #4a8aff;
-  }
+  .weather-daily-card__wind svg { opacity: 0.6; }
+  .weather-daily-card__rain--active { color: #4a8aff; }
 </style>
