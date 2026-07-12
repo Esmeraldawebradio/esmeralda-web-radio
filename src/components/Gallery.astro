@@ -6,12 +6,12 @@ interface GalleryItem {
 }
 
 const PHOTOS: GalleryItem[] = [
-  { src: "https://picsum.photos/seed/praiasancho/400/300", alt: "Praia paradisíaca", caption: "Praia do Sancho, PE" },
-  { src: "https://picsum.photos/seed/chapada/400/520", alt: "Pôr do sol no cerrado", caption: "Chapada dos Veadeiros, GO" },
-  { src: "https://picsum.photos/seed/cristoredentor/400/280", alt: "Cristo Redentor", caption: "Rio de Janeiro, RJ" },
-  { src: "https://picsum.photos/seed/iguacu/400/540", alt: "Cachoeira", caption: "Foz do Iguaçu, PR" },
-  { src: "https://picsum.photos/seed/amazonia/400/480", alt: "Amazônia", caption: "Floresta Amazônica, AM" },
-  { src: "https://picsum.photos/seed/salvadorba/400/320", alt: "Pelourinho", caption: "Salvador, BA" },
+  { src: "https://picsum.photos/seed/pindobacu1/400/300", alt: "Vista rural de Pindobaçu", caption: "Pindobaçu, BA" },
+  { src: "https://picsum.photos/seed/caatinga/400/520", alt: "Caatinga baiana", caption: "Caatinga, Sertão da Bahia" },
+  { src: "https://picsum.photos/seed/pindobacu2/400/280", alt: "Estrada de Pindobaçu", caption: "Estrada rural, Pindobaçu, BA" },
+  { src: "https://picsum.photos/seed/sertaobahia/400/540", alt: "Sertão nordestino", caption: "Sertão Baiano" },
+  { src: "https://picsum.photos/seed/pindobacu3/400/480", alt: "Paisagem de Pindobaçu", caption: "Interior de Pindobaçu, BA" },
+  { src: "https://picsum.photos/seed/chapadabahia/400/320", alt: "Chapada Diamantina", caption: "Chapada Diamantina, BA" },
 ];
 ---
 
@@ -19,7 +19,7 @@ const PHOTOS: GalleryItem[] = [
   <div class="container">
     <header class="section-header">
       <h2 id="gallery-title" class="section-title">Galeria de Fotos</h2>
-      <p class="section-subtitle">Belezas do Brasil em cada clique</p>
+      <p class="section-subtitle">Belezas de Pindobaçu e da Bahia em cada clique</p>
     </header>
 
     <div class="gallery-grid">
@@ -45,29 +45,34 @@ const PHOTOS: GalleryItem[] = [
 
 <script>
   (function() {
+    const SEEDS = ['pindobacu', 'caatinga', 'sertaobahia', 'chapadabahia', 'nordeste', 'pindobacu'];
+    let seedIndex = 0;
+
+    function seedURL(w, h) {
+      const s = SEEDS[seedIndex % SEEDS.length];
+      seedIndex++;
+      return 'https://picsum.photos/seed/' + s + seedIndex + '/' + w + '/' + h;
+    }
+
     const grid = document.querySelector('.gallery-grid');
     if (!grid) return;
     const items = grid.querySelectorAll('.gallery-item');
     if (!items.length) return;
 
-    function randomURL(w, h) {
-      return 'https://picsum.photos/' + w + '/' + h + '?t=' + Date.now();
-    }
-
     function refresh() {
+      seedIndex = 0;
       items.forEach(item => {
         const img = item.querySelector('img');
         if (!img) return;
         const w = img.naturalWidth || 400;
         const h = img.naturalHeight || 300;
         img.style.opacity = '0';
-        const url = randomURL(w, h);
-        const high = 'https://picsum.photos/' + w * 2 + '/' + h * 2 + '?t=' + Date.now();
+        const url = seedURL(w, h);
         const newImg = new Image();
         newImg.onload = function() {
           img.src = this.src;
           img.style.opacity = '1';
-          item.href = high;
+          item.href = url.replace(/\/\d+\/\d+$/, '/800/600');
         };
         newImg.src = url;
       });
