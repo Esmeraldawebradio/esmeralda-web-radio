@@ -53,7 +53,7 @@
     const src = `https://picsum.photos/seed/${item.slug||'n'+i}/600/400`;
     const feat = isFeatured ? ' featured' : '';
     return `
-      <a href="${item.url}" class="news-card${feat}" target="_blank" rel="noopener" style="--news-color:${cat.color}">
+      <a href="${item.url}" class="news-card${feat} stagger-item" target="_blank" rel="noopener" style="--news-color:${cat.color};--i:${i}">
         <div class="news-card-img">
           <img src="${src}" alt="${item.title}" loading="lazy">
           <div class="news-card-img-overlay"></div>
@@ -80,7 +80,7 @@
     return items.map((item, i) => {
       const cat = catInfo(item.cat);
       return `
-        <a href="#" class="news-card" style="--news-color:${cat.color}">
+        <a href="#" class="news-card stagger-item" style="--news-color:${cat.color};--i:${i}">
           <div class="news-card-img">
             <img src="https://picsum.photos/seed/fb${i}/600/400" alt="" loading="lazy">
             <div class="news-card-img-overlay"></div>
@@ -167,4 +167,5 @@
   .news-card-more { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--news-color, var(--color-primary)); margin-top: auto; }
 
   .news-footer { text-align: center; margin-top: var(--space-4); font-size: var(--text-xs); color: var(--color-ink-subtle); }
+  .news-card.stagger-item { animation-delay: calc(var(--i, 0) * 60ms); }
 </style>

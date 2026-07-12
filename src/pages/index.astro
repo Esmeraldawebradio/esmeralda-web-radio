@@ -39,10 +39,11 @@ import Gallery from '../components/Gallery.astro';
         </header>
 
         <div class="schedule-grid" role="list" aria-label="Grade de programação">
-          {enrichSchedule(SCHEDULE).map((item) => {
+          {enrichSchedule(SCHEDULE).map((item, i) => {
             return (
               <article
-                class={`schedule-card glass ${item.isCurrent ? 'current' : ''}`}
+                class={`schedule-card glass stagger-item ${item.isCurrent ? 'current' : ''}`}
+                style={`--i: ${i}`}
                 role="listitem"
                 aria-current={item.isCurrent ? 'time' : undefined}
               >
@@ -219,6 +220,7 @@ import Gallery from '../components/Gallery.astro';
     border-color: var(--color-primary);
     background: rgba(192,96,0,0.06);
   }
+  .schedule-card { animation-delay: calc(var(--i, 0) * 60ms); }
 
   .on-air-badge {
     position: absolute;

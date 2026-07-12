@@ -146,6 +146,10 @@ const SHOUTCAST_URL = STATION.shoutcastUrl || streamUrl.replace(/\/stream\/?$/, 
   .btn-play.error:hover { background: var(--color-error-hover); }
   .btn-play:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  .btn-play:not(.playing):not(.buffering):not(.error):not(:disabled) {
+    animation: pulse-idle 3s ease-in-out infinite;
+  }
+
   .btn-play svg { width: 24px; height: 24px; }
   .btn-play.playing .icon-play { display: none; }
   .btn-play:not(.playing) .icon-pause { display: none; }
@@ -167,7 +171,13 @@ const SHOUTCAST_URL = STATION.shoutcastUrl || streamUrl.replace(/\/stream\/?$/, 
     to { transform: rotate(360deg); }
   }
 
+  @keyframes pulse-idle {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(192,96,0,0.3); }
+    50% { box-shadow: 0 0 0 6px rgba(192,96,0,0.08); }
+  }
+
   @media (prefers-reduced-motion: reduce) {
+    .btn-play:not(.playing):not(.buffering):not(.error):not(:disabled) { animation: none; }
     .icon-spinner { animation: none; border-top-color: transparent; }
   }
 
