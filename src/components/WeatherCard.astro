@@ -256,63 +256,67 @@ const STATE = "DF";
 
   // ===== Carregamento dos dados =====
   async function loadWeatherData() {
-    try {
-      const url = 'https://api.open-meteo.com/v1/forecast'
-        + `?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}`
-        + '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode,wind_speed_10m_max,wind_direction_10m_dominant'
-        + '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weathercode,wind_speed_10m,wind_direction_10m,uv_index'
-        + '&hourly=temperature_2m,precipitation_probability,weathercode'
-        + '&timezone=America/Sao_Paulo&forecast_days=8&wind_speed_unit=kmh';
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const url = 'https://api.open-meteo.com/v1/forecast'
+          + `?latitude=${WEATHER_LAT}&longitude=${WEATHER_LON}`
+          + '&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode,wind_speed_10m_max,wind_direction_10m_dominant'
+          + '&current=temperature_2m,relative_humidity_2m,apparent_temperature,weathercode,wind_speed_10m,wind_direction_10m,uv_index'
+          + '&hourly=temperature_2m,precipitation_probability,weathercode'
+          + '&timezone=America/Sao_Paulo&forecast_days=8&wind_speed_unit=kmh';
 
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Falha ao carregar dados meteorológicos');
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Falha ao carregar dados meteorológicos');
 
-      const data = await response.json();
-      const daily = data.daily;
-      const current = data.current;
-      const hourly = data.hourly;
+        const data = await response.json();
+        const daily = data.daily;
+        const current = data.current;
+        const hourly = data.hourly;
 
-      // Dados diários
-      const dailyForecast = daily.time.map((_, index) => ({
-        dayName: getDayName(daily.time[index]),
-        date: formatDate(daily.time[index]),
-        code: daily.weathercode[index],
-        maxTemp: Math.round(daily.temperature_2m_max[index]),
-        minTemp: Math.round(daily.temperature_2m_min[index]),
-        rainChance: daily.precipitation_probability_max[index] || 0,
-        windSpeed: Math.round(daily.wind_speed_10m_max[index]),
-        windDirection: getWindDirection(daily.wind_direction_10m_dominant[index]),
-      }));
+        // Dados diários
+        const dailyForecast = daily.time.map((_, index) => ({
+          dayName: getDayName(daily.time[index]),
+          date: formatDate(daily.time[index]),
+          code: daily.weathercode[index],
+          maxTemp: Math.round(daily.temperature_2m_max[index]),
+          minTemp: Math.round(daily.temperature_2m_min[index]),
+          rainChance: daily.precipitation_probability_max[index] || 0,
+          windSpeed: Math.round(daily.wind_speed_10m_max[index]),
+          windDirection: getWindDirection(daily.wind_direction_10m_dominant[index]),
+        }));
 
-      // Dados horários (próximas 8 horas)
-      const now = new Date();
-      const currentHour = now.getHours();
-      const hourlyForecast = [];
+        // Dados horários (próximas 8 horas)
+        const now = new Date();
+        const currentHour = now.getHours();
+        const hourlyForecast = [];
 
-      for (let i = 0; i < hourly.time.length; i++) {
-        const hourDate = new Date(hourly.time[i]);
-        const matchesToday = hourDate.getDate() === now.getDate();
-        const isWithinRange = hourDate.getHours() >= currentHour && hourDate.getHours() < currentHour + 8;
+        for (let i = 0; i < hourly.time.length; i++) {
+          const hourDate = new Date(hourly.time[i]);
+          const matchesToday = hourDate.getDate() === now.getDate();
+          const isWithinRange = hourDate.getHours() >= currentHour && hourDate.getHours() < currentHour + 8;
 
-        if (isWithinRange && matchesToday) {
-          hourlyForecast.push({
-            time: String(hourDate.getHours()).padStart(2, '0') + 'h',
-            temperature: Math.round(hourly.temperature_2m[i]),
-            rainChance: hourly.precipitation_probability[i] || 0,
-            code: hourly.weathercode[i],
-          });
+          if (isWithinRange && matchesToday) {
+            hourlyForecast.push({
+              time: String(hourDate.getHours()).padStart(2, '0') + 'h',
+              temperature: Math.round(hourly.temperature_2m[i]),
+              rainChance: hourly.precipitation_probability[i] || 0,
+              code: hourly.weathercode[i],
+            });
+          }
         }
+
+        // Montagem do HTML
+        root.innerHTML = `
+          ${buildCurrentWeather(current, dailyForecast[0])}
+          ${buildHourlyForecast(hourlyForecast)}
+          ${buildDailyForecast(dailyForecast)}`;
+        return;
+
+      } catch (error) {
+        if (attempt < 2) await new Promise(r => setTimeout(r, 2000));
       }
-
-      // Montagem do HTML
-      root.innerHTML = `
-        ${buildCurrentWeather(current, dailyForecast[0])}
-        ${buildHourlyForecast(hourlyForecast)}
-        ${buildDailyForecast(dailyForecast)}`;
-
-    } catch (error) {
-      root.innerHTML = '<p class="weather-error">Previsão temporariamente indisponível. Tente novamente mais tarde.</p>';
     }
+    root.innerHTML = '<p class="weather-error">Previsão temporariamente indisponível.</p>';
   }
 
   loadWeatherData();
