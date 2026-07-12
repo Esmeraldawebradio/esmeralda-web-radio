@@ -93,7 +93,8 @@ const jsonLd = JSON.stringify({
     <header class="site-header" role="banner">
       <div class="container">
         <a href={`${base}/`} class="logo" aria-label="Esmeralda Web Rádio - Início">
-          <img src={`${base}/logo.png`} alt="Esmeralda Web Rádio" class="logo-img" width="180" height="60" />
+          <img src={`${base}/logo.png`} alt="" class="logo-img" width="60" height="60" />
+          <span class="logo-text">Esmeralda Web Rádio</span>
         </a>
 
         <nav class="main-nav" aria-label="Navegação principal">
@@ -241,15 +242,17 @@ const jsonLd = JSON.stringify({
   .logo {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    gap: var(--space-3);
     text-decoration: none;
     color: var(--color-ink);
   }
 
-  .logo-img { display: block; height: 48px; width: auto; }
+  .logo-img { display: block; height: 52px; width: auto; }
+  .logo-text { font-size: var(--text-xl); font-weight: var(--weight-bold); color: var(--color-ink); white-space: nowrap; }
 
   @media (max-width: 640px) {
-    .logo-img { height: 36px; }
+    .logo-img { height: 44px; }
+    .logo-text { font-size: var(--text-lg); }
   }
 
   .main-nav {
@@ -284,7 +287,6 @@ const jsonLd = JSON.stringify({
   @media (max-width: 640px) {
     .main-nav { gap: var(--space-3); }
     .nav-link { display: none; }
-    .logo-text { display: none; }
   }
 
   /* ===== Main ===== */
