@@ -72,7 +72,7 @@ export function buildCurrentWeather(current: any, today: any) {
           <div class="weather-current-temperature">${current.temperature_2m}°C</div>
           <div class="weather-current-feels-like">Sensação ${current.apparent_temperature}°C</div>
           <div class="weather-current-condition">${weather.label}</div>
-          <div class="weather-current-location">Brasília, DF</div>
+          <div class="weather-current-location">Pindobaçu, BA</div>
         </div>
       </div>
       <div class="weather-current-details">
