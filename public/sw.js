@@ -1,4 +1,4 @@
-const CACHE = 'esmeralda-v2';
+const CACHE = 'esmeralda-v3';
 const OFFLINE_URL = './404.html';
 const PRECACHE = ['./', './404.html', './manifest.webmanifest', './favicon.svg'];
 
