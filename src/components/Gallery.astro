@@ -43,6 +43,40 @@ const PHOTOS: GalleryItem[] = [
   </div>
 </section>
 
+<script>
+  (function() {
+    const grid = document.querySelector('.gallery-grid');
+    if (!grid) return;
+    const items = grid.querySelectorAll('.gallery-item');
+    if (!items.length) return;
+
+    function randomURL(w, h) {
+      return 'https://picsum.photos/' + w + '/' + h + '?t=' + Date.now();
+    }
+
+    function refresh() {
+      items.forEach(item => {
+        const img = item.querySelector('img');
+        if (!img) return;
+        const w = img.naturalWidth || 400;
+        const h = img.naturalHeight || 300;
+        img.style.opacity = '0';
+        const url = randomURL(w, h);
+        const high = 'https://picsum.photos/' + w * 2 + '/' + h * 2 + '?t=' + Date.now();
+        const newImg = new Image();
+        newImg.onload = function() {
+          img.src = this.src;
+          img.style.opacity = '1';
+          item.href = high;
+        };
+        newImg.src = url;
+      });
+    }
+
+    setInterval(refresh, 600000);
+  })();
+</script>
+
 <style is:global>
   .gallery-section {
     padding: var(--space-10) 0;
@@ -80,7 +114,7 @@ const PHOTOS: GalleryItem[] = [
   .gallery-item img {
     width: 100%;
     display: block;
-    transition: transform var(--duration-slow) var(--ease-out-quart);
+    transition: transform var(--duration-slow) var(--ease-out-quart), opacity 0.4s ease;
   }
   .gallery-item:hover img {
     transform: scale(1.08);
