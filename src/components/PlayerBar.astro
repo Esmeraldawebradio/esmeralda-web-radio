@@ -5,37 +5,16 @@
  */
 import type { AstroProps } from 'astro';
 import { STATION, SCHEDULE } from '../config.ts';
+import { getCurrentProgram, formatPresenter } from '../utils/schedule.ts';
 
 interface Props extends AstroProps {
   streamUrl?: string;
 }
 
 const { streamUrl = STATION.url } = Astro.props;
-const BASE_PATH = import.meta.env.BASE_URL;
-const now = new Date();
-const currentHour = now.getHours();
-const currentMinute = now.getMinutes();
-const currentTime = currentHour * 60 + currentMinute;
-
-function getCurrentProgram() {
-  for (const item of SCHEDULE) {
-    const [startStr] = item.time.split(' - ');
-    const [startH, startM] = startStr.split(':').map(Number);
-    const start = startH * 60 + startM;
-    const [endStr] = item.time.split(' - ')[1].split(':');
-    const [endH, endM] = item.time.split(' - ')[1].split(':').map(Number);
-    const end = endH * 60 + endM;
-    if (currentTime >= start && currentTime < end) {
-      return item;
-    }
-  }
-  return SCHEDULE[0];
-}
-
-const currentProgram = getCurrentProgram();
-const presenter = Array.isArray(currentProgram.presenters)
-  ? currentProgram.presenters.join(', ')
-  : currentProgram.presenter || currentProgram.presenters?.[0] || '';
+const currentProgram = getCurrentProgram(SCHEDULE);
+const presenter = formatPresenter(currentProgram);
+const SHOUTCAST_URL = STATION.shoutcastUrl || streamUrl.replace(/\/stream\/?$/, '');
 ---
 
 <style>
@@ -274,7 +253,7 @@ const presenter = Array.isArray(currentProgram.presenters)
   </button>
 </div>
 
-<script is:inline define:vars={{ SCHEDULE, RAW_STREAM_URL: STATION.url }}>
+<script is:inline define:vars={{ SCHEDULE, RAW_STREAM_URL: STATION.url, SHOUTCAST_BASE: SHOUTCAST_URL }}>
   // ===== PlayerBar Logic (Vanilla JS, roda no cliente) =====
   (function() {
     'use strict';
@@ -433,9 +412,7 @@ const presenter = Array.isArray(currentProgram.presenters)
 
     async function fetchMetadata() {
       try {
-        // Tentar buscar metadados do Icecast/Shoutcast
-        // Muitos servidores expõem /status.xsl ou /status-json.xsl
-        const metadataUrl = RAW_STREAM_URL.replace(/\/stream\/?$/, '/status-json.xsl');
+        const metadataUrl = SHOUTCAST_BASE + '/status-json.xsl';
         const res = await fetch(metadataUrl, { mode: 'cors' });
         if (!res.ok) throw new Error('Metadata not available');
         const data = await res.json();
@@ -535,30 +512,33 @@ const presenter = Array.isArray(currentProgram.presenters)
       }, 300);
     }
 
-    // Initialize schedule-based now-playing (fallback)
+    function parseTime(t) {
+      const [h, m] = t.split(':').map(Number);
+      return h * 60 + m;
+    }
+
+    function formatPresenters(item) {
+      return Array.isArray(item.presenters)
+        ? item.presenters.join(', ')
+        : item.presenter || '';
+    }
+
     function updateScheduleNowPlaying() {
       const now = new Date();
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
-      const currentTime = currentHour * 60 + currentMinute;
+      const currentTime = now.getHours() * 60 + now.getMinutes();
 
       for (const item of SCHEDULE) {
         const [startStr, endStr] = item.time.split(' - ');
-        const [startH, startM] = startStr.split(':').map(Number);
-        const [endH, endM] = endStr.split(':').map(Number);
-        const start = startH * 60 + startM;
-        const end = endH * 60 + endM;
+        const start = parseTime(startStr);
+        const end = parseTime(endStr);
 
         if (currentTime >= start && currentTime < end) {
           if (programTitleEl) programTitleEl.textContent = item.program;
           if (programTimeEl) programTimeEl.textContent = item.time;
           if (programPresenterEl) {
-            const presenter = Array.isArray(item.presenters)
-              ? item.presenters.join(', ')
-              : item.presenter || item.presenters?.[0] || '';
-            programPresenterEl.textContent = presenter;
-            programPresenterEl.style.display = presenter ? 'inline' : 'none';
-            document.querySelector('.program-separator:nth-of-type(2)')?.style.setProperty('display', presenter ? 'inline' : 'none');
+            const p = formatPresenters(item);
+            programPresenterEl.textContent = p;
+            programPresenterEl.style.display = p ? 'inline' : 'none';
           }
           break;
         }

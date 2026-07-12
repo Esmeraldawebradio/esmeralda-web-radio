@@ -1,15 +1,6 @@
-/* Esmeralda Web Radio — Service Worker
- * Estrategia:
- *  - App shell em cache no install (offline fallback)
- *  - Navegacao: network-first com fallback para cache/offline
- *  - Assets estaticos (mesma origem): stale-while-revalidate
- *  - /proxy-stream: proxy do stream HTTP (contorna mixed content em HTTPS)
- */
-
 const CACHE = 'esmeralda-v1';
 const OFFLINE_URL = './404.html';
 const PRECACHE = ['./', './404.html', './manifest.webmanifest', './favicon.svg'];
-const STREAM_ORIGIN = 'http://usa3.fastcast4u.com:1080';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -33,16 +24,8 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
 
-  // Proxy do stream de audio (para HTTPS, pois o stream e HTTP)
-  if (url.pathname.endsWith('/proxy-stream')) {
-    event.respondWith(proxyStream(event));
-    return;
-  }
-
-  // Nao interceptar cross-origin
   if (url.origin !== self.location.origin) return;
 
-  // Navegacoes (HTML): network-first
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
@@ -59,7 +42,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Assets estaticos: stale-while-revalidate
   event.respondWith(
     caches.match(request).then((cached) => {
       const network = fetch(request)
@@ -75,13 +57,3 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
-
-async function proxyStream() {
-  try {
-    // Retorna o fetch direto — sem new Response() para preservar o streaming
-    return await fetch(STREAM_ORIGIN + '/stream');
-  } catch (err) {
-    console.error('[SW] Proxy stream error:', err);
-    return new Response('Stream unavailable', { status: 502 });
-  }
-}

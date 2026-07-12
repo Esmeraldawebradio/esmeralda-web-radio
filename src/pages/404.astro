@@ -3,6 +3,7 @@
  * 404 Page — Esmeralda Web Rádio
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
+const base = import.meta.env.BASE_URL;
 ---
 
 <BaseLayout title="Página não encontrada - Esmeralda Web Rádio" description="A página que você procura não existe. Volte para a rádio ao vivo.">
@@ -17,8 +18,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             A Esmeralda Web Rádio continua no ar — sintonize e curta a programação.
           </p>
           <div class="notfound-actions">
-            <a href="/" class="btn-primary">Voltar ao player</a>
-            <a href="/#programacao" class="btn-secondary">Ver programação</a>
+            <a href={`${base}/`} class="btn-primary">Voltar ao player</a>
+            <a href={`${base}/#programacao`} class="btn-secondary">Ver programação</a>
           </div>
         </div>
       </div>
@@ -73,27 +74,4 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     gap: var(--space-3);
   }
 
-  .btn-primary,
-  .btn-secondary {
-    display: inline-flex;
-    align-items: center;
-    padding: var(--space-3) var(--space-6);
-    border-radius: var(--radius-full);
-    font-weight: var(--weight-semibold);
-    font-size: var(--text-base);
-    transition: all var(--duration-base) var(--ease-out-quart);
-  }
-
-  .btn-primary {
-    background: var(--color-primary);
-    color: white;
-  }
-  .btn-primary:hover { background: var(--color-primary-hover); text-decoration: none; transform: translateY(-2px); }
-
-  .btn-secondary {
-    background: var(--color-surface-elevated);
-    border: 1px solid var(--color-border);
-    color: var(--color-ink);
-  }
-  .btn-secondary:hover { border-color: var(--color-primary); color: var(--color-primary); text-decoration: none; transform: translateY(-2px); }
 </style>

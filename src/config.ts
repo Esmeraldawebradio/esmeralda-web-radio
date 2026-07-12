@@ -1,6 +1,7 @@
 ﻿export const STATION = {
   name: "Esmeralda Web Rádio",
-  url: "https://esmeralda-stream-proxy.esmeraldawebradio.workers.dev/stream"
+  url: "https://esmeralda-stream-proxy.esmeraldawebradio.workers.dev/stream",
+  shoutcastUrl: "http://usa3.fastcast4u.com:1080"
 };
 
 export const CONTACT = {
@@ -8,10 +9,6 @@ export const CONTACT = {
   email: "marlonsantiago.0002@gmail.com"
 };
 
-export const APPS = {
-  appStore: "https://apps.apple.com/br/app/esmeralda-web-radio",
-  googlePlay: "https://play.google.com/store/apps/details?id=com.esmeraldawebradio.app"
-};
 
 export const SCHEDULE = [
   {

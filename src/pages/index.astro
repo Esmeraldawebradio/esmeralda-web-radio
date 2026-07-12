@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { STATION, SCHEDULE, CONTACT } from '../config.ts';
+import { enrichSchedule } from '../utils/schedule.ts';
 import NewsGrid from '../components/NewsGrid.astro';
 import WeatherCard from '../components/WeatherCard.astro';
 import Gallery from '../components/Gallery.astro';
@@ -38,31 +39,17 @@ import Gallery from '../components/Gallery.astro';
         </header>
 
         <div class="schedule-grid" role="list" aria-label="Grade de programação">
-          {SCHEDULE.map((item, index) => {
-            const now = new Date();
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
-            const currentTime = currentHour * 60 + currentMinute;
-            const [startStr, endStr] = item.time.split(' - ');
-            const [startH, startM] = startStr.split(':').map(Number);
-            const [endH, endM] = endStr.split(':').map(Number);
-            const start = startH * 60 + startM;
-            const end = endH * 60 + endM;
-            const isCurrent = currentTime >= start && currentTime < end;
-            const presenter = Array.isArray(item.presenters)
-              ? item.presenters.join(', ')
-              : item.presenter || item.presenters?.[0] || '';
-
+          {enrichSchedule(SCHEDULE).map((item) => {
             return (
               <article
-                class={`schedule-card glass ${isCurrent ? 'current' : ''}`}
+                class={`schedule-card glass ${item.isCurrent ? 'current' : ''}`}
                 role="listitem"
-                aria-current={isCurrent ? 'time' : undefined}
+                aria-current={item.isCurrent ? 'time' : undefined}
               >
-                {isCurrent && <span class="on-air-badge" aria-label="No ar agora">AO VIVO</span>}
+                {item.isCurrent && <span class="on-air-badge" aria-label="No ar agora">AO VIVO</span>}
                 <time class="schedule-time" dateTime={item.time}>{item.time}</time>
                 <h3 class="schedule-program">{item.program}</h3>
-                {presenter && <p class="schedule-presenter">Com {presenter}</p>}
+                {item.presenterLabel && <p class="schedule-presenter">Com {item.presenterLabel}</p>}
                 <p class="schedule-description">{item.description}</p>
               </article>
             );

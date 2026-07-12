@@ -23,13 +23,12 @@ const PHOTOS: GalleryItem[] = [
     </header>
 
     <div class="gallery-grid">
-      {PHOTOS.map((photo, i) => (
+      {PHOTOS.map((photo) => (
         <a
           href={photo.src.replace('w=600&q=80', 'w=1200&q=90')}
           class="gallery-item glass clickable"
           target="_blank"
           rel="noopener"
-          style={`--i: ${i}`}
           aria-label={photo.alt}
         >
           <img src={photo.src} alt={photo.alt} loading="lazy" />
@@ -72,7 +71,7 @@ const PHOTOS: GalleryItem[] = [
     display: block;
     transition: all var(--duration-base) var(--ease-spring);
     animation: gallery-in 0.6s var(--ease-out-quart) both;
-    animation-delay: calc(var(--i, 0) * 80ms);
+    animation-delay: 0ms;
   }
   .gallery-item:hover {
     transform: scale(1.04) translateY(-4px);
@@ -111,4 +110,11 @@ const PHOTOS: GalleryItem[] = [
   .gallery-item:hover .gallery-caption {
     transform: translateY(0);
   }
+
+  .gallery-item:nth-child(1) { animation-delay: 0ms; }
+  .gallery-item:nth-child(2) { animation-delay: 80ms; }
+  .gallery-item:nth-child(3) { animation-delay: 160ms; }
+  .gallery-item:nth-child(4) { animation-delay: 240ms; }
+  .gallery-item:nth-child(5) { animation-delay: 320ms; }
+  .gallery-item:nth-child(6) { animation-delay: 400ms; }
 </style>
