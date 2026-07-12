@@ -33,6 +33,8 @@ export const weatherSvgIcons: Record<string, string> = {
   'rain-heavy': `<path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#8098B0" stroke="#507090" stroke-width="2"/><g stroke="#3A6AEF" stroke-width="3" stroke-linecap="round"><line x1="20" y1="40" x2="14" y2="52"/><line x1="30" y1="40" x2="24" y2="52"/><line x1="40" y1="40" x2="34" y2="52"/><line x1="50" y1="40" x2="44" y2="52"/></g>`,
   snow: `<path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#E8EEF4" stroke="#C0D0E0" stroke-width="2"/><g fill="#B0C8E0"><circle cx="20" cy="42" r="2"/><circle cx="30" cy="48" r="2"/><circle cx="40" cy="42" r="2"/><circle cx="50" cy="48" r="2"/></g>`,
   storm: `<path d="M16 34h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#506080" stroke="#304060" stroke-width="2"/><g stroke="#FFD700" stroke-width="2"><polyline points="34,36 28,44 36,44 28,52" fill="#FFD700"/></g>`,
+  moon: `<path d="M36 8C28 8 20 14 20 24s8 16 16 16c-4-2-7-6-7-10s3-8 7-10z" fill="#E8E8D0" stroke="#C0C0A0" stroke-width="2"/><circle cx="38" cy="18" r="1.5" fill="#C0C0A0"/><circle cx="42" cy="24" r="1" fill="#C0C0A0"/><circle cx="36" cy="30" r="1" fill="#C0C0A0"/>`,
+  'cloud-moon': `<path d="M36 10C30 10 24 15 24 22s6 12 12 12c-3-2-5-5-5-8s2-6 5-8z" fill="#D0D0C0" stroke="#B0B0A0" stroke-width="1.5"/><path d="M16 44h32a10 10 0 0 0 0-20h-3a14 14 0 0 0-26-4h-1a9 9 0 0 0 0 18h0z" fill="#C8D0D8" stroke="#A0B0C0" stroke-width="2"/>`,
 };
 
 export function renderWeatherIcon(iconName: string) {
@@ -63,11 +65,17 @@ export function formatDate(dateString: string) {
 
 export function buildCurrentWeather(current: any, today: any) {
   const weather = getWeather(current.weathercode);
+  const isDay = current.is_day;
+  let icon = weather.icon;
+  if (!isDay) {
+    if (icon === 'sun') icon = 'moon';
+    else if (icon === 'cloud-sun') icon = 'cloud-moon';
+  }
   return `
     <div class="weather-current-section" style="--weather-gradient: ${weather.gradient}">
       <div class="weather-current-section__overlay"></div>
       <div class="weather-current-main">
-        <div class="weather-current-icon-wrapper">${renderWeatherIcon(weather.icon)}</div>
+        <div class="weather-current-icon-wrapper">${renderWeatherIcon(icon)}</div>
         <div class="weather-current-info">
           <div class="weather-current-temperature">${current.temperature_2m}°C</div>
           <div class="weather-current-feels-like">Sensação ${current.apparent_temperature}°C</div>
