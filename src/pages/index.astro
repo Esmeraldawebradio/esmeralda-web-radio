@@ -1,7 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { STATION, SCHEDULE, CONTACT } from '../config.ts';
-import { enrichSchedule } from '../utils/schedule.ts';
 import NewsGrid from '../components/NewsGrid.astro';
 import WeatherCard from '../components/WeatherCard.astro';
 import Gallery from '../components/Gallery.astro';
@@ -37,20 +36,25 @@ import Gallery from '../components/Gallery.astro';
           <p class="section-subtitle">24 horas de música e informação para todos os gostos</p>
         </header>
 
-        <div class="schedule-grid" role="list" aria-label="Grade de programação">
-          {enrichSchedule(SCHEDULE).map((item, i) => {
+        <div class="schedule-grid" role="list" aria-label="Grade de programação" id="schedule-grid">
+          {SCHEDULE.map((item, i) => {
+            const label = item.presenter
+              ? `Com ${item.presenter}`
+              : Array.isArray(item.presenters)
+                ? `Com ${item.presenters.join(', ')}`
+                : '';
             return (
               <article
-                class={`schedule-card glass stagger-item ${item.isCurrent ? 'current' : ''}`}
+                class="schedule-card glass"
                 style={`--i: ${i}`}
                 role="listitem"
-                aria-current={item.isCurrent ? 'time' : undefined}
+                data-time={item.time}
+                data-days={item.days}
               >
-                {item.isCurrent && <span class="on-air-badge" aria-label="No ar agora">AO VIVO</span>}
                 <time class="schedule-time" dateTime={item.time}>{item.time}</time>
                 <h3 class="schedule-program">{item.program}</h3>
                 <span class="schedule-days">{item.days}</span>
-                {item.presenterLabel && <p class="schedule-presenter">Com {item.presenterLabel}</p>}
+                {label && <p class="schedule-presenter">{label}</p>}
                 <p class="schedule-description">{item.description}</p>
               </article>
             );
@@ -58,6 +62,52 @@ import Gallery from '../components/Gallery.astro';
         </div>
       </div>
     </section>
+
+    <script>
+      (function() {
+        const DAY_NAMES = { 'Dom': 0, 'Seg': 1, 'Ter': 2, 'Qua': 3, 'Qui': 4, 'Sex': 5, 'Sáb': 6 };
+        const now = new Date();
+        const today = now.getDay();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const grid = document.getElementById('schedule-grid');
+        if (!grid) return;
+        const cards = grid.querySelectorAll('[data-time]');
+        let currentCard = null;
+        cards.forEach(card => {
+          const days = card.dataset.days || '';
+          if (!dayMatches(days, today)) { card.style.display = 'none'; return; }
+          card.style.display = '';
+          const [startStr, endStr] = card.dataset.time.split(' - ');
+          const [sh, sm] = startStr.split(':').map(Number);
+          const [eh, em] = endStr.split(':').map(Number);
+          const start = sh * 60 + sm;
+          const end = eh * 60 + em;
+          if (currentMinutes >= start && currentMinutes < end) {
+            currentCard = card;
+          }
+        });
+        if (currentCard) {
+          currentCard.classList.add('current');
+          currentCard.setAttribute('aria-current', 'time');
+          const badge = document.createElement('span');
+          badge.className = 'on-air-badge';
+          badge.textContent = 'AO VIVO';
+          badge.setAttribute('aria-label', 'No ar agora');
+          currentCard.prepend(badge);
+        }
+        function dayMatches(days, today) {
+          if (days === 'Todos os dias') return true;
+          if (days.includes(' a ')) {
+            const [s, e] = days.split(' a ');
+            return today >= DAY_NAMES[s] && today <= DAY_NAMES[e];
+          }
+          if (days.includes(' e ')) {
+            return days.split(' e ').some(d => DAY_NAMES[d.trim()] === today);
+          }
+          return DAY_NAMES[days] === today;
+        }
+      })();
+    </script>
 
     <NewsGrid />
     <WeatherCard />

@@ -1,17 +1,55 @@
 ---
 interface GalleryItem {
   src: string;
+  full: string;
+  page: string;
   alt: string;
   caption?: string;
 }
 
 const PHOTOS: GalleryItem[] = [
-  { src: "https://picsum.photos/seed/pindobacu1/400/300", alt: "Vista rural de Pindobaçu", caption: "Pindobaçu, BA" },
-  { src: "https://picsum.photos/seed/caatinga/400/520", alt: "Caatinga baiana", caption: "Caatinga, Sertão da Bahia" },
-  { src: "https://picsum.photos/seed/pindobacu2/400/280", alt: "Estrada de Pindobaçu", caption: "Estrada rural, Pindobaçu, BA" },
-  { src: "https://picsum.photos/seed/sertaobahia/400/540", alt: "Sertão nordestino", caption: "Sertão Baiano" },
-  { src: "https://picsum.photos/seed/pindobacu3/400/480", alt: "Paisagem de Pindobaçu", caption: "Interior de Pindobaçu, BA" },
-  { src: "https://picsum.photos/seed/chapadabahia/400/320", alt: "Chapada Diamantina", caption: "Chapada Diamantina, BA" },
+  {
+    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Chapada_norte_-_panoramio.jpg/640px-Chapada_norte_-_panoramio.jpg",
+    full: "https://upload.wikimedia.org/wikipedia/commons/4/46/Chapada_norte_-_panoramio.jpg",
+    page: "https://commons.wikimedia.org/wiki/File:Chapada_norte_-_panoramio.jpg",
+    alt: "Chapada Norte em Pindobaçu",
+    caption: "Chapada Norte, Pindobaçu, BA"
+  },
+  {
+    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Monte_santa_cruz_-_panoramio.jpg/640px-Monte_santa_cruz_-_panoramio.jpg",
+    full: "https://upload.wikimedia.org/wikipedia/commons/e/ea/Monte_santa_cruz_-_panoramio.jpg",
+    page: "https://commons.wikimedia.org/wiki/File:Monte_santa_cruz_-_panoramio.jpg",
+    alt: "Monte Santa Cruz em Pindobaçu",
+    caption: "Monte Santa Cruz, Pindobaçu, BA"
+  },
+  {
+    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/71/Monte_santa_Cruz%2C_cruzeiro_de_Pindoba%C3%A7u_-_panoramio.jpg/640px-Monte_santa_Cruz%2C_cruzeiro_de_Pindoba%C3%A7u_-_panoramio.jpg",
+    full: "https://upload.wikimedia.org/wikipedia/commons/7/71/Monte_santa_Cruz%2C_cruzeiro_de_Pindoba%C3%A7u_-_panoramio.jpg",
+    page: "https://commons.wikimedia.org/wiki/File:Monte_santa_Cruz,_cruzeiro_de_Pindoba%C3%A7u_-_panoramio.jpg",
+    alt: "Cruzeiro no Monte Santa Cruz em Pindobaçu",
+    caption: "Cruzeiro do Monte Santa Cruz, Pindobaçu, BA"
+  },
+  {
+    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Ponte_sobre_rio_Capivari_-_panoramio.jpg/640px-Ponte_sobre_rio_Capivari_-_panoramio.jpg",
+    full: "https://upload.wikimedia.org/wikipedia/commons/2/28/Ponte_sobre_rio_Capivari_-_panoramio.jpg",
+    page: "https://commons.wikimedia.org/wiki/File:Ponte_sobre_rio_Capivari_-_panoramio.jpg",
+    alt: "Ponte sobre o Rio Capivari em Pindobaçu",
+    caption: "Ponte sobre o Rio Capivari, Pindobaçu, BA"
+  },
+  {
+    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Chapada_norte_-_panoramio.jpg/480px-Chapada_norte_-_panoramio.jpg",
+    full: "https://upload.wikimedia.org/wikipedia/commons/4/46/Chapada_norte_-_panoramio.jpg",
+    page: "https://commons.wikimedia.org/wiki/File:Chapada_norte_-_panoramio.jpg",
+    alt: "Vista da Chapada Norte em Pindobaçu",
+    caption: "Serra da Carnaíba, Pindobaçu, BA"
+  },
+  {
+    src: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Ponte_sobre_rio_Capivari_-_panoramio.jpg/480px-Ponte_sobre_rio_Capivari_-_panoramio.jpg",
+    full: "https://upload.wikimedia.org/wikipedia/commons/2/28/Ponte_sobre_rio_Capivari_-_panoramio.jpg",
+    page: "https://commons.wikimedia.org/wiki/File:Ponte_sobre_rio_Capivari_-_panoramio.jpg",
+    alt: "Rio Capivari em Pindobaçu",
+    caption: "Rio Capivari, Pindobaçu, BA"
+  },
 ];
 ---
 
@@ -25,7 +63,7 @@ const PHOTOS: GalleryItem[] = [
     <div class="gallery-grid">
       {PHOTOS.map((photo) => (
         <a
-          href={photo.src.replace(/\/\d+(\/\d+)?$/, '/800')}
+          href={photo.page}
           class="gallery-item"
           target="_blank"
           rel="noopener"
@@ -40,47 +78,10 @@ const PHOTOS: GalleryItem[] = [
         </a>
       ))}
     </div>
+
+    <p class="gallery-credit">Fotos: Erick Perfil (CC BY-SA 3.0 via Wikimedia Commons)</p>
   </div>
 </section>
-
-<script>
-  (function() {
-    const SEEDS = ['pindobacu', 'caatinga', 'sertaobahia', 'chapadabahia', 'nordeste', 'pindobacu'];
-    let seedIndex = 0;
-
-    function seedURL(w, h) {
-      const s = SEEDS[seedIndex % SEEDS.length];
-      seedIndex++;
-      return 'https://picsum.photos/seed/' + s + seedIndex + '/' + w + '/' + h;
-    }
-
-    const grid = document.querySelector('.gallery-grid');
-    if (!grid) return;
-    const items = grid.querySelectorAll('.gallery-item');
-    if (!items.length) return;
-
-    function refresh() {
-      seedIndex = 0;
-      items.forEach(item => {
-        const img = item.querySelector('img');
-        if (!img) return;
-        const w = img.naturalWidth || 400;
-        const h = img.naturalHeight || 300;
-        img.style.opacity = '0';
-        const url = seedURL(w, h);
-        const newImg = new Image();
-        newImg.onload = function() {
-          img.src = this.src;
-          img.style.opacity = '1';
-          item.href = url.replace(/\/\d+\/\d+$/, '/800/600');
-        };
-        newImg.src = url;
-      });
-    }
-
-    setInterval(refresh, 600000);
-  })();
-</script>
 
 <style is:global>
   .gallery-section {
@@ -140,5 +141,12 @@ const PHOTOS: GalleryItem[] = [
   }
   .gallery-item:hover .gallery-caption {
     opacity: 1;
+  }
+
+  .gallery-credit {
+    text-align: center;
+    font-size: var(--text-xs);
+    color: var(--color-ink-subtle);
+    margin-top: var(--space-4);
   }
 </style>
