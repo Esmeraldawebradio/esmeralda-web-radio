@@ -5,6 +5,7 @@
  */
 import type { AstroProps } from 'astro';
 import PlayerBar from '../components/PlayerBar.astro';
+import AnalogClock from '../components/AnalogClock.astro';
 import '../styles/tokens.css';
 
 interface Props extends AstroProps {
@@ -92,9 +93,12 @@ const jsonLd = JSON.stringify({
     <!-- Header / Nav -->
     <header class="site-header" role="banner">
       <div class="container">
-        <a href={`${base}/`} class="logo" aria-label="Esmeralda Web Rádio - Início">
-          <img src={`${base}/logo.png`} alt="Esmeralda Web Rádio" class="logo-img" width="40" height="40" />
-        </a>
+        <div class="logo-group">
+          <a href={`${base}/`} class="logo" aria-label="Esmeralda Web Rádio - Início">
+            <img src={`${base}/logo.png`} alt="Esmeralda Web Rádio" class="logo-img" width="40" height="40" />
+          </a>
+          <AnalogClock />
+        </div>
 
         <nav class="main-nav" aria-label="Navegação principal">
           <a href="#programacao" class="nav-link">Programação</a>
@@ -258,6 +262,11 @@ const jsonLd = JSON.stringify({
     gap: var(--space-4);
   }
 
+  .logo-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
   .logo { display: flex; align-items: center; text-decoration: none; }
   .logo-img { display: block; height: 36px; width: auto; }
 

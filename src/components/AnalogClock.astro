@@ -1,0 +1,62 @@
+---
+interface Props {
+  size?: number;
+}
+
+const { size = 42 } = Astro.props;
+const cx = size / 2;
+const cy = size / 2;
+const r = size / 2 - 2;
+---
+
+<span class="analog-clock" style={`width:${size}px;height:${size}px`} aria-label="Relógio analógico" role="timer">
+  <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size}>
+    <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--color-border-strong)" stroke-width="1.5" />
+    <line class="clock-hour" x1={cx} y1={cy} x2={cx} y2={cy - r * 0.5} stroke="var(--color-ink)" stroke-width="2" stroke-linecap="round" />
+    <line class="clock-minute" x1={cx} y1={cy} x2={cx} y2={cy - r * 0.7} stroke="var(--color-ink)" stroke-width="1.5" stroke-linecap="round" />
+    <line class="clock-second" x1={cx} y1={cy} x2={cx} y2={cy - r * 0.8} stroke="var(--color-primary)" stroke-width="0.8" stroke-linecap="round" />
+    <circle cx={cx} cy={cy} r="1.5" fill="var(--color-primary)" />
+  </svg>
+</span>
+
+<script>
+  (function() {
+    const clocks = document.querySelectorAll('.analog-clock');
+    clocks.forEach(clock => {
+      const svg = clock.querySelector('svg');
+      if (!svg) return;
+      const hourHand = svg.querySelector('.clock-hour');
+      const minuteHand = svg.querySelector('.clock-minute');
+      const secondHand = svg.querySelector('.clock-second');
+      if (!hourHand || !minuteHand) return;
+      function update() {
+        const now = new Date();
+        const h = now.getHours() % 12;
+        const m = now.getMinutes();
+        const s = now.getSeconds();
+        const hDeg = (h / 12) * 360 + (m / 60) * 30;
+        const mDeg = (m / 60) * 360;
+        const sDeg = (s / 60) * 360;
+        hourHand.setAttribute('transform', `rotate(${hDeg} ${svg.viewBox.baseVal.width / 2} ${svg.viewBox.baseVal.height / 2})`);
+        minuteHand.setAttribute('transform', `rotate(${mDeg} ${svg.viewBox.baseVal.width / 2} ${svg.viewBox.baseVal.height / 2})`);
+        if (secondHand) {
+          secondHand.setAttribute('transform', `rotate(${sDeg} ${svg.viewBox.baseVal.width / 2} ${svg.viewBox.baseVal.height / 2})`);
+        }
+      }
+      update();
+      setInterval(update, 1000);
+    });
+  })();
+</script>
+
+<style>
+  .analog-clock {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .analog-clock svg {
+    display: block;
+  }
+</style>
