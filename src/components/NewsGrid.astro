@@ -24,15 +24,30 @@ function timeAgo(s: string) {
   return Math.floor(diff / 86400) + 'd';
 }
 
-function cardHTML(item: any, i: number, isFeatured: boolean) {
+async function fetchOgImage(url: string): Promise<string | null> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const html = await res.text();
+    const m = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i)
+           || html.match(/<meta\s+content=["']([^"']+)["']\s+property=["']og:image["']/i);
+    return m ? m[1] : null;
+  } catch {
+    return null;
+  }
+}
+
+function cardHTML(item: any, i: number, isFeatured: boolean, imgSrc: string) {
   const cat = catInfo(item.categories?.[0] || 'brazil');
   const outlets = item.outlets?.map((o: any) => o.name).join(', ') || 'Daily Journal';
-  const src = `https://picsum.photos/seed/${item.slug||'n'+i}/600/400`;
   const feat = isFeatured ? ' featured' : '';
   return `
     <a href="${item.url}" class="news-card${feat} stagger-item" target="_blank" rel="noopener" style="--news-color:${cat.color};--i:${i}">
       <div class="news-card-img">
-        <img src="${src}" alt="${item.title}" loading="lazy">
+        <img src="${imgSrc}" alt="${item.title}" loading="lazy">
         <div class="news-card-img-overlay"></div>
         <span class="news-card-badge">${cat.label}</span>
       </div>
@@ -78,7 +93,13 @@ try {
   if (res.ok) {
     const data = await res.json();
     const items = data.items || [];
-    serverHTML = `<div class="news-grid">${items.map((item: any, i: number) => cardHTML(item, i, i === 0)).join('')}</div>
+    const cards = await Promise.all(items.map(async (item: any, i: number) => {
+      let img = item.image_url || null;
+      if (!img) img = await fetchOgImage(item.url);
+      if (!img) img = `https://picsum.photos/seed/${item.slug || 'n' + i}/600/400`;
+      return cardHTML(item, i, i === 0, img);
+    }));
+    serverHTML = `<div class="news-grid">${cards.join('')}</div>
       <p class="news-footer">Agregado por Daily Journal · G1, Folha, UOL, CNN Brasil e mais</p>`;
   }
 } catch (e) {
