@@ -3,7 +3,6 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import { STATION, SCHEDULE, CONTACT } from '../config.ts';
 import NewsGrid from '../components/NewsGrid.astro';
 import WeatherCard from '../components/WeatherCard.astro';
-import Gallery from '../components/Gallery.astro';
 ---
 
 <BaseLayout title="Esmeralda Web Rádio - Ao Vivo" description={STATION.name + ' - ' + 'A rádio web moderna que conecta você com música e entretenimento de qualidade.'}>
@@ -111,8 +110,6 @@ import Gallery from '../components/Gallery.astro';
 
     <NewsGrid />
     <WeatherCard />
-    <Gallery />
-
     <section id="sobre" class="about-section section-padded section-surface" aria-labelledby="about-title">
       <div class="container">
         <div class="about-grid">
