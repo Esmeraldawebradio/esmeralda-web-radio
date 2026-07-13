@@ -34,7 +34,7 @@ import Gallery from '../components/Gallery.astro';
       <div class="container">
         <header class="section-header">
           <h2 id="schedule-title" class="section-title">Programação Diária</h2>
-          <p class="section-subtitle">Das 06:00 às 18:00, ao vivo para você</p>
+          <p class="section-subtitle">24 horas de música e informação para todos os gostos</p>
         </header>
 
         <div class="schedule-grid" role="list" aria-label="Grade de programação">
@@ -49,6 +49,7 @@ import Gallery from '../components/Gallery.astro';
                 {item.isCurrent && <span class="on-air-badge" aria-label="No ar agora">AO VIVO</span>}
                 <time class="schedule-time" dateTime={item.time}>{item.time}</time>
                 <h3 class="schedule-program">{item.program}</h3>
+                <span class="schedule-days">{item.days}</span>
                 {item.presenterLabel && <p class="schedule-presenter">Com {item.presenterLabel}</p>}
                 <p class="schedule-description">{item.description}</p>
               </article>
@@ -246,6 +247,16 @@ import Gallery from '../components/Gallery.astro';
     font-weight: var(--weight-semibold);
     color: var(--color-ink);
     margin-bottom: var(--space-1);
+  }
+  .schedule-days {
+    display: inline-block;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-medium);
+    color: var(--color-ink-subtle);
+    background: var(--color-surface);
+    padding: 1px var(--space-2);
+    border-radius: var(--radius-full);
+    margin-bottom: var(--space-2);
   }
   .schedule-presenter {
     font-size: var(--text-sm);

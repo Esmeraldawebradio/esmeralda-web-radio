@@ -15,35 +15,85 @@ export const SCHEDULE = [
     time: "06:00 - 08:00",
     program: "Bom Dia Esmeralda",
     presenter: "Marlon Santiago",
-    description: "Janela de notícias matinal com as principais notícias"
+    days: "Seg a Sex",
+    description: "Abertura com notícias, clima e música"
+  },
+  {
+    time: "06:00 - 10:00",
+    program: "MPB Clássico",
+    days: "Sáb e Dom",
+    description: "Música Popular Brasileira de todos os tempos"
   },
   {
     time: "08:00 - 10:00",
     program: "Música Sertaneja",
-    presenters: ["João Silva", "Maria Costa"],
-    description: "Música country brasileira ao vivo"
+    days: "Seg a Sex",
+    description: "O melhor da música sertaneja raiz e universitária"
   },
   {
     time: "10:00 - 12:00",
     program: "Hits do Momento",
-    presenter: "DJ Alex",
-    description: "As maiores músicas da música pop internacional"
+    days: "Seg a Sex",
+    description: "Os maiores sucessos do pop nacional e internacional"
+  },
+  {
+    time: "10:00 - 12:00",
+    program: "Samba & Pagode",
+    days: "Sáb e Dom",
+    description: "Roda de samba e pagode para o fim de semana"
   },
   {
     time: "12:00 - 14:00",
     program: "Intervalo Musical",
-    description: "Intervalo para o público relaxar"
+    days: "Todos os dias",
+    description: "Músicas selecionadas para embalar seu almoço"
   },
   {
     time: "14:00 - 16:00",
     program: "Hits Anos 80",
-    presenter: "Especial Retro",
-    description: "Músicas inesquecíveis dos anos 80"
+    days: "Seg a Sex",
+    description: "Clássicos inesquecíveis dos anos 80"
+  },
+  {
+    time: "14:00 - 18:00",
+    program: "Tarde de Domingo",
+    days: "Sáb e Dom",
+    description: "Tarde animada com MPB, samba e bom humor"
   },
   {
     time: "16:00 - 18:00",
     program: "Conversa de Domingo",
-    presenter: "a Comunidade",
-    description: "Conversas informativas com participantes"
+    days: "Seg a Sex",
+    description: "Programa interativo com a comunidade"
+  },
+  {
+    time: "18:00 - 20:00",
+    program: "Hits do Brasil",
+    days: "Todos os dias",
+    description: "O melhor da música brasileira contemporânea"
+  },
+  {
+    time: "20:00 - 22:00",
+    program: "Sertanejo Universitário",
+    days: "Seg a Sex",
+    description: "Sucessos do sertanejo universitário"
+  },
+  {
+    time: "20:00 - 22:00",
+    program: "Eletrônico",
+    days: "Sáb e Dom",
+    description: "Música eletrônica para sua noite"
+  },
+  {
+    time: "22:00 - 23:59",
+    program: "Night Hits",
+    days: "Todos os dias",
+    description: "Seleção especial para a noite"
+  },
+  {
+    time: "00:00 - 05:59",
+    program: "Madrugada Instrumental",
+    days: "Todos os dias",
+    description: "Músicas instrumentais relaxantes"
   }
 ];
