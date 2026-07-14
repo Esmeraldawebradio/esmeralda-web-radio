@@ -1,8 +1,8 @@
 ﻿export const STATION = {
   name: "Esmeralda Web Rádio",
-  url: "https://stationery-weblog-formula-intend.trycloudflare.com/listen/azuratest_radio/radio.mp3",
-  mobileUrl: "https://stationery-weblog-formula-intend.trycloudflare.com/listen/azuratest_radio/mobile.mp3",
-  apiUrl: "https://stationery-weblog-formula-intend.trycloudflare.com/api/nowplaying/azuratest_radio"
+  url: "https://adaptation-sensitivity-annual-poor.trycloudflare.com/listen/azuratest_radio/radio.mp3",
+  mobileUrl: "https://adaptation-sensitivity-annual-poor.trycloudflare.com/listen/azuratest_radio/mobile.mp3",
+  apiUrl: "https://adaptation-sensitivity-annual-poor.trycloudflare.com/api/nowplaying/azuratest_radio"
 };
 
 export const CONTACT = {
