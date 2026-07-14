@@ -305,7 +305,6 @@ const API_URL = STATION.apiUrl || '';
       if (audio) return;
       audio = new Audio();
       audio.preload = 'metadata';
-      audio.crossOrigin = 'anonymous';
       setAudioSource(streamUrlIndex);
 
       audio.addEventListener('loadstart', onLoadStart);
