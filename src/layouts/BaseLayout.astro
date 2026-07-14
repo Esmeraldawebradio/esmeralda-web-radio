@@ -94,7 +94,7 @@ const jsonLd = JSON.stringify({
       <div class="container">
         <div class="logo-group">
           <a href={`${base}/`} class="logo" aria-label="Esmeralda Web Rádio - Início">
-            <img src={`${base}/logo.png`} alt="Esmeralda Web Rádio" class="logo-img" width="40" height="40" />
+            <img src={`${base}/logo.png`} alt="Esmeralda Web Rádio" class="logo-img" width="56" height="56" />
           </a>
         </div>
 
@@ -199,6 +199,28 @@ const jsonLd = JSON.stringify({
       document.querySelectorAll('[data-year]').forEach(el => {
         el.textContent = new Date().getFullYear();
       });
+
+      // Ripple effect for buttons (inspired by @tojawuzik)
+      function createRipple(e) {
+        const btn = e.currentTarget;
+        const rect = btn.getBoundingClientRect();
+        const ripple = document.createElement("span");
+        ripple.className = "ripple";
+        const size = Math.max(rect.width, rect.height);
+        const x = e.clientX - rect.left - size / 2;
+        const y = e.clientY - rect.top - size / 2;
+        ripple.style.width = ripple.style.height = size + "px";
+        ripple.style.left = x + "px";
+        ripple.style.top = y + "px";
+        btn.appendChild(ripple);
+        ripple.addEventListener("animationend", () => ripple.remove());
+      }
+
+      document.querySelectorAll(".btn-glow, .btn-play, .social-card, .app-link").forEach(btn => {
+        btn.addEventListener("click", createRipple);
+      });
+
+      document.querySelectorAll(".hero-actions").forEach(el => el.classList.add("btn-group-stagger"));
     </script>
 
     <!-- Service Worker (PWA offline) -->
@@ -266,7 +288,7 @@ const jsonLd = JSON.stringify({
     gap: var(--space-2);
   }
   .logo { display: flex; align-items: center; text-decoration: none; }
-  .logo-img { display: block; height: 36px; width: auto; }
+  .logo-img { display: block; height: 56px; width: auto; }
 
   .main-nav {
     display: flex;
