@@ -14,7 +14,7 @@ interface Props extends AstroProps {
 const { streamUrl = STATION.url } = Astro.props;
 const currentProgram = getCurrentProgram(SCHEDULE);
 const presenter = formatPresenter(currentProgram);
-const SHOUTCAST_URL = STATION.shoutcastUrl || streamUrl.replace(/\/stream\/?$/, '');
+const API_URL = STATION.apiUrl || '';
 ---
 
 <style>
@@ -263,13 +263,17 @@ const SHOUTCAST_URL = STATION.shoutcastUrl || streamUrl.replace(/\/stream\/?$/, 
   </button>
 </div>
 
-<script is:inline define:vars={{ SCHEDULE, RAW_STREAM_URL: STATION.url, SHOUTCAST_BASE: SHOUTCAST_URL }}>
+<script is:inline define:vars={{ SCHEDULE, RAW_STREAM_URL: STATION.url, API_BASE: API_URL }}>
   // ===== PlayerBar Logic (Vanilla JS, roda no cliente) =====
   (function() {
     'use strict';
 
     const STREAM_URLS = [RAW_STREAM_URL];
     let streamUrlIndex = 0;
+
+    // Artist/title elements (for metadata display)
+    const artistEl = document.querySelector('[data-program-presenter]');
+    const nowPlayingEl = document.querySelector('[data-now-playing]');
 
     const playBtn = document.getElementById('play-btn');
     const volumeBtn = document.getElementById('volume-btn');
@@ -421,19 +425,21 @@ const SHOUTCAST_URL = STATION.shoutcastUrl || streamUrl.replace(/\/stream\/?$/, 
     }
 
     async function fetchMetadata() {
+      if (!API_BASE) return;
       try {
-        const metadataUrl = SHOUTCAST_BASE + '/status-json.xsl';
-        const res = await fetch(metadataUrl, { mode: 'cors' });
+        const res = await fetch(API_BASE, { mode: 'cors' });
         if (!res.ok) throw new Error('Metadata not available');
         const data = await res.json();
-        // Shoutcast v2 JSON: icestats.source[0].title
-        const source = data.icestats?.source?.[0] || data.icestats?.source;
-        if (source?.title) {
-          updateNowPlaying(source.title);
+        const np = data.now_playing;
+        if (np?.song?.title) {
+          const title = np.song.title;
+          const artist = np.song.artist;
+          if (programTitleEl) {
+            programTitleEl.textContent = artist ? `${artist} - ${title}` : title;
+          }
         }
       } catch (e) {
         // Silencioso - fallback para schedule estático
-        // console.debug('[PlayerBar] Metadata fetch failed, using schedule');
       }
     }
 
