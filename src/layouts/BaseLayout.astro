@@ -91,12 +91,12 @@ const jsonLd = JSON.stringify({
 
     <!-- Header / Nav -->
     <header class="site-header" role="banner">
+      <a href={`${base}/`} class="logo" aria-label="Esmeralda Web Rádio - Início">
+        <img src={`${base}/logo.png`} alt="Esmeralda Web Rádio" class="logo-img" width="80" height="80" />
+      </a>
+
       <div class="container">
-        <div class="logo-group">
-          <a href={`${base}/`} class="logo" aria-label="Esmeralda Web Rádio - Início">
-            <img src={`${base}/logo.png`} alt="Esmeralda Web Rádio" class="logo-img" width="56" height="56" />
-          </a>
-        </div>
+        <div class="logo-spacer"></div>
 
         <nav class="main-nav" aria-label="Navegação principal">
           <a href="#programacao" class="nav-link">Programação</a>
@@ -273,22 +273,29 @@ const jsonLd = JSON.stringify({
     border-bottom: 1px solid var(--color-border);
     backdrop-filter: blur(8px);
     padding: var(--space-2) 0;
+    position: relative;
   }
 
   .site-header .container {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: center;
     gap: var(--space-4);
   }
 
-  .logo-group {
+  .logo {
+    position: absolute;
+    left: var(--space-4);
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
     align-items: center;
-    gap: var(--space-2);
+    text-decoration: none;
+    z-index: 1;
   }
-  .logo { display: flex; align-items: center; text-decoration: none; }
-  .logo-img { display: block; height: 56px; width: auto; }
+  .logo-img { display: block; height: 80px; width: auto; }
+
+  .logo-spacer { width: 80px; flex-shrink: 0; }
 
   .main-nav {
     display: flex;
@@ -320,6 +327,10 @@ const jsonLd = JSON.stringify({
   .nav-link:hover::after { transform: scaleX(1); transform-origin: left; }
 
   @media (max-width: 640px) {
+    .site-header .container { justify-content: flex-end; }
+    .logo { position: static; transform: none; }
+    .logo-img { height: 56px; }
+    .logo-spacer { display: none; }
     .main-nav { gap: var(--space-3); }
     .nav-link { display: none; }
   }
