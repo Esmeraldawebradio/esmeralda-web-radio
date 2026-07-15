@@ -89,11 +89,12 @@ const jsonLd = JSON.stringify({
   <body>
     <a href="#main-content" class="skip-link">Pular para o conteúdo</a>
 
+    <a href={`${base}/`} class="logo-desktop" aria-label="Esmeralda Web Rádio - Início">
+      <img src={`${base}/logo.png`} alt="Esmeralda Web Rádio" class="logo-img" width="200" height="200" />
+    </a>
+
     <!-- Header / Nav -->
     <header class="site-header" role="banner">
-      <a href={`${base}/`} class="logo-desktop" aria-label="Esmeralda Web Rádio - Início">
-        <img src={`${base}/logo.png`} alt="Esmeralda Web Rádio" class="logo-img" width="200" height="200" />
-      </a>
       <a href={`${base}/`} class="logo-mobile" aria-label="Esmeralda Web Rádio - Início">
         <img src={`${base}/logo.png`} alt="Esmeralda Web Rádio" class="logo-img" width="150" height="150" />
       </a>
@@ -257,6 +258,7 @@ const jsonLd = JSON.stringify({
 
 <style>
   /* ===== Layout Base ===== */
+  body { position: relative; }
   .container {
     width: 100%;
     max-width: var(--container-max);
@@ -288,10 +290,13 @@ const jsonLd = JSON.stringify({
   }
 
   .logo-desktop {
+    position: absolute;
+    left: var(--space-4);
+    top: var(--space-2);
     display: flex;
     align-items: center;
     text-decoration: none;
-    flex-shrink: 0;
+    z-index: calc(var(--z-sticky) + 1);
   }
   .logo-mobile { display: none; }
   .logo-img { display: block; height: 200px; width: auto; }
