@@ -91,10 +91,13 @@ const jsonLd = JSON.stringify({
 
     <!-- Header / Nav -->
     <header class="site-header" role="banner">
+      <a href={`${base}/`} class="logo-desktop" aria-label="Esmeralda Web Rádio - Início">
+        <img src={`${base}/logo.png`} alt="Esmeralda Web Rádio" class="logo-img" width="200" height="200" />
+      </a>
+      <a href={`${base}/`} class="logo-mobile" aria-label="Esmeralda Web Rádio - Início">
+        <img src={`${base}/logo.png`} alt="Esmeralda Web Rádio" class="logo-img" width="150" height="150" />
+      </a>
       <div class="container">
-        <a href={`${base}/`} class="logo-mobile" aria-label="Esmeralda Web Rádio - Início">
-          <img src={`${base}/logo.png`} alt="Esmeralda Web Rádio" class="logo-img" width="150" height="150" />
-        </a>
         <nav class="main-nav" aria-label="Navegação principal">
           <a href="#programacao" class="nav-link">Programação</a>
           <a href="#clima" class="nav-link">Clima</a>
@@ -104,10 +107,6 @@ const jsonLd = JSON.stringify({
         </nav>
       </div>
     </header>
-
-    <a href={`${base}/`} class="logo-desktop" aria-label="Esmeralda Web Rádio - Início">
-      <img src={`${base}/logo.png`} alt="Esmeralda Web Rádio" class="logo-img" width="200" height="200" />
-    </a>
 
     <!-- Main Content -->
     <main id="main-content" role="main">
@@ -273,24 +272,26 @@ const jsonLd = JSON.stringify({
     background: var(--color-surface-elevated);
     border-bottom: 1px solid var(--color-border);
     backdrop-filter: blur(8px);
-    padding: var(--space-2) 0;
+    display: flex;
+    align-items: center;
+    padding: var(--space-2) var(--space-4);
   }
 
   .site-header .container {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex: 1;
     gap: var(--space-4);
+    max-width: none;
+    padding: 0;
   }
 
   .logo-desktop {
-    position: fixed;
-    left: var(--space-4);
-    top: 180px;
     display: flex;
     align-items: center;
     text-decoration: none;
-    z-index: calc(var(--z-sticky) + 1);
+    flex-shrink: 0;
   }
   .logo-mobile { display: none; }
   .logo-img { display: block; height: 200px; width: auto; }
