@@ -92,7 +92,7 @@ const jsonLd = JSON.stringify({
     <!-- Header / Nav -->
     <header class="site-header" role="banner">
       <a href={`${base}/`} class="logo" aria-label="Esmeralda Web Rádio - Início">
-        <img src={`${base}/logo.png`} alt="Esmeralda Web Rádio" class="logo-img" width="80" height="80" />
+        <img src={`${base}/logo.png`} alt="Esmeralda Web Rádio" class="logo-img" width="150" height="150" />
       </a>
 
       <div class="container">
@@ -272,7 +272,8 @@ const jsonLd = JSON.stringify({
     background: var(--color-surface-elevated);
     border-bottom: 1px solid var(--color-border);
     backdrop-filter: blur(8px);
-    padding: var(--space-2) 0;
+    padding: var(--space-4) 0;
+    min-height: 160px;
     position: relative;
   }
 
@@ -286,16 +287,16 @@ const jsonLd = JSON.stringify({
   .logo {
     position: absolute;
     left: var(--space-4);
-    top: 50%;
+    top: 60%;
     transform: translateY(-50%);
     display: flex;
     align-items: center;
     text-decoration: none;
     z-index: 1;
   }
-  .logo-img { display: block; height: 80px; width: auto; }
+  .logo-img { display: block; height: 150px; width: auto; }
 
-  .logo-spacer { width: 80px; flex-shrink: 0; }
+  .logo-spacer { width: 150px; flex-shrink: 0; }
 
   .main-nav {
     display: flex;
@@ -329,7 +330,7 @@ const jsonLd = JSON.stringify({
   @media (max-width: 640px) {
     .site-header .container { justify-content: flex-end; }
     .logo { position: static; transform: none; }
-    .logo-img { height: 56px; }
+    .logo-img { height: 64px; }
     .logo-spacer { display: none; }
     .main-nav { gap: var(--space-3); }
     .nav-link { display: none; }
