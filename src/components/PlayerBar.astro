@@ -5,7 +5,7 @@
  */
 import type { AstroProps } from 'astro';
 import { STATION, SCHEDULE } from '../config.ts';
-import { getCurrentProgram, formatPresenter } from '../utils/schedule.ts';
+import { getCurrentProgram } from '../utils/schedule.ts';
 
 interface Props extends AstroProps {
   streamUrl?: string;
@@ -13,7 +13,6 @@ interface Props extends AstroProps {
 
 const { streamUrl = STATION.url } = Astro.props;
 const currentProgram = getCurrentProgram(SCHEDULE);
-const presenter = formatPresenter(currentProgram);
 const API_URL = STATION.apiUrl || '';
 ---
 
@@ -186,6 +185,19 @@ const API_URL = STATION.apiUrl || '';
     50% { box-shadow: 0 0 0 6px rgba(192,96,0,0.08); }
   }
 
+  @keyframes ripple-effect {
+    to { transform: scale(4); opacity: 0; }
+  }
+
+  .ripple {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.4);
+    pointer-events: none;
+    animation: ripple-effect 0.6s var(--ease-out-quart) forwards;
+    z-index: 1;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .btn-play:not(.playing):not(.buffering):not(.error):not(:disabled) { animation: none; }
     .icon-spinner { animation: none; border-top-color: transparent; }
@@ -211,6 +223,21 @@ const API_URL = STATION.apiUrl || '';
 
   .btn-volume svg { width: 20px; height: 20px; }
 
+  @keyframes spring-in {
+    0% { transform: scale(0.8); opacity: 0; }
+    50% { transform: scale(1.08); }
+    70% { transform: scale(0.96); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .btn-group-stagger > * {
+    animation: spring-in 0.6s var(--ease-spring) both;
+  }
+  .btn-group-stagger > *:nth-child(1) { animation-delay: 0s; }
+  .btn-group-stagger > *:nth-child(2) { animation-delay: 0.1s; }
+  .btn-group-stagger > *:nth-child(3) { animation-delay: 0.2s; }
+  .btn-group-stagger > *:nth-child(4) { animation-delay: 0.3s; }
+
   /* Esconde a barra após erro persistente */
   .player-bar.hidden { display: none; }
 </style>
@@ -226,12 +253,7 @@ const API_URL = STATION.apiUrl || '';
       <span class="program-time" data-program-time>{currentProgram.time}</span>
       <span class="program-separator" aria-hidden="true">·</span>
       <span class="program-title" data-program-title>{currentProgram.program}</span>
-      {presenter && (
-        <>
-          <span class="program-separator" aria-hidden="true">·</span>
-          <span class="program-presenter" data-program-presenter>{presenter}</span>
-        </>
-      )}
+
     </div>
   </div>
 
@@ -281,16 +303,13 @@ const API_URL = STATION.apiUrl || '';
     const STREAM_URLS = [RAW_STREAM_URL];
     let streamUrlIndex = 0;
 
-    // Artist/title elements (for metadata display)
-    const artistEl = document.querySelector('[data-program-presenter]');
-    const nowPlayingEl = document.querySelector('[data-now-playing]');
+    let showingMetadata = false;
 
     const playBtn = document.getElementById('play-btn');
     const volumeBtn = document.getElementById('volume-btn');
     const stationNameEl = document.querySelector('[data-station-name]');
     const programTitleEl = document.querySelector('[data-program-title]');
     const programTimeEl = document.querySelector('[data-program-time]');
-    const programPresenterEl = document.querySelector('[data-program-presenter]');
 
     if (!playBtn) return;
 
@@ -356,6 +375,7 @@ const API_URL = STATION.apiUrl || '';
       saveState(false);
       updatePlayButton();
       stopMetadataPolling();
+      clearMetadata();
     }
 
     function onWaiting() {
@@ -370,6 +390,7 @@ const API_URL = STATION.apiUrl || '';
       isPlaying = false;
       updatePlayButton();
       stopMetadataPolling();
+      clearMetadata();
     }
 
     function onError(e) {
@@ -387,6 +408,7 @@ const API_URL = STATION.apiUrl || '';
         }, 2000 * retryCount);
       } else {
         setError(true);
+        clearMetadata();
         console.warn('[PlayerBar] Todas as tentativas falharam.');
       }
     }
@@ -440,16 +462,20 @@ const API_URL = STATION.apiUrl || '';
         if (!res.ok) throw new Error('Metadata not available');
         const data = await res.json();
         const np = data.now_playing;
-        if (np?.song?.title) {
+        if (np?.song?.title && programTitleEl) {
           const title = np.song.title;
           const artist = np.song.artist;
-          if (programTitleEl) {
-            programTitleEl.textContent = artist ? `${artist} - ${title}` : title;
-          }
+          programTitleEl.textContent = artist ? `${artist} - ${title}` : title;
+          showingMetadata = true;
         }
       } catch (e) {
         // Silencioso - fallback para schedule estático
       }
+    }
+
+    function clearMetadata() {
+      showingMetadata = false;
+      updateScheduleNowPlaying();
     }
 
     function updateNowPlaying(title) {
@@ -542,13 +568,9 @@ const API_URL = STATION.apiUrl || '';
       return h * 60 + m;
     }
 
-    function formatPresenters(item) {
-      return Array.isArray(item.presenters)
-        ? item.presenters.join(', ')
-        : item.presenter || '';
-    }
-
     function updateScheduleNowPlaying() {
+      if (showingMetadata) return;
+
       const now = new Date();
       const currentTime = now.getHours() * 60 + now.getMinutes();
 
@@ -560,11 +582,6 @@ const API_URL = STATION.apiUrl || '';
         if (currentTime >= start && currentTime < end) {
           if (programTitleEl) programTitleEl.textContent = item.program;
           if (programTimeEl) programTimeEl.textContent = item.time;
-          if (programPresenterEl) {
-            const p = formatPresenters(item);
-            programPresenterEl.textContent = p;
-            programPresenterEl.style.display = p ? 'inline' : 'none';
-          }
           break;
         }
       }
