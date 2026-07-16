@@ -1,8 +1,8 @@
 export const STATION = {
   name: "Esmeralda Web Rádio",
-  url: "https://truth-fairly-cad-happy.trycloudflare.com/listen/azuratest_radio/radio.mp3",
-  mobileUrl: "https://truth-fairly-cad-happy.trycloudflare.com/listen/azuratest_radio/mobile.mp3",
-  apiUrl: "https://truth-fairly-cad-happy.trycloudflare.com/api/nowplaying/azuratest_radio"
+  url: "https://esmeraldawebradio.duckdns.org/listen/esmeralda/esmeralda",
+  mobileUrl: "https://esmeraldawebradio.duckdns.org/listen/esmeralda/esmeralda",
+  apiUrl: "https://esmeraldawebradio.duckdns.org/api/nowplaying/esmeralda"
 };
 
 export const CONTACT = {

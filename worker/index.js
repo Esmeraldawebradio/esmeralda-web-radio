@@ -1,36 +1,34 @@
-const STREAM_URL = 'http://usa3.fastcast4u.com:1080/stream';
+async function handleRequest(event) {
+  const url = new URL(event.request.url);
+  const path = url.pathname;
+
+  if (path === '/health') {
+    return new Response('OK', { status: 200 });
+  }
+
+  if (path.includes('icecast')) {
+    try {
+      const r = await fetch('http://137.131.169.167:8000/status-json.xsl');
+      const t = await r.text();
+      return new Response(`icecast ${r.status}: ${t.substring(0, 200)}`);
+    } catch (e) {
+      return new Response(`icecast error: ${e.message}`);
+    }
+  }
+
+  if (path.includes('azuracast')) {
+    try {
+      const r = await fetch('http://137.131.169.167/api/nowplaying/esmeralda');
+      const t = await r.text();
+      return new Response(`azuracast ${r.status}: ${t.substring(0, 200)}`);
+    } catch (e) {
+      return new Response(`azuracast error: ${e.message}`);
+    }
+  }
+
+  return new Response(`path: ${path}`, { status: 200 });
+}
 
 addEventListener('fetch', event => {
-  const url = new URL(event.request.url);
-
-  if (url.pathname === '/health') {
-    return event.respondWith(new Response('OK', { status: 200 }));
-  }
-
-  if (url.pathname === '/stream') {
-    const upstream = fetch(STREAM_URL, {
-      headers: { 'User-Agent': 'Mozilla/5.0' },
-    });
-
-    event.respondWith(
-      upstream
-        .then(response => {
-          const headers = new Headers(response.headers);
-          headers.set('Access-Control-Allow-Origin', '*');
-          headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
-          headers.set('Access-Control-Allow-Headers', '*');
-          headers.set('Content-Type', 'audio/mpeg');
-          headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-          return new Response(response.body, {
-            status: response.status,
-            statusText: response.statusText,
-            headers,
-          });
-        })
-        .catch(() => new Response('Stream error', { status: 502 })),
-    );
-    return;
-  }
-
-  event.respondWith(new Response('Proxy Esmeralda', { status: 200 }));
+  event.respondWith(handleRequest(event));
 });
