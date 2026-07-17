@@ -21,6 +21,37 @@ function timeAgo(s: string) {
   return Math.floor(diff / 86400) + 'd';
 }
 
+const ENTITIES: Record<string, string> = {
+  amp:'&',lt:'<',gt:'>',quot:'"',apos:"'",nbsp:'\u00A0',
+  aacute:'á',eacute:'é',iacute:'í',oacute:'ó',uacute:'ú',yacute:'ý',
+  agrave:'à',egrave:'è',igrave:'ì',ograve:'ò',ugrave:'ù',
+  acirc:'â',ecirc:'ê',icirc:'î',ocirc:'ô',ucirc:'û',
+  atilde:'ã',otilde:'õ',ntilde:'ñ',
+  auml:'ä',euml:'ë',iuml:'ï',ouml:'ö',uuml:'ü',yuml:'ÿ',
+  ccedil:'ç',
+  Aacute:'Á',Eacute:'É',Iacute:'Í',Oacute:'Ó',Uacute:'Ú',Yacute:'Ý',
+  Agrave:'À',Egrave:'È',Igrave:'Ì',Ograve:'Ò',Ugrave:'Ù',
+  Acirc:'Â',Ecirc:'Ê',Icirc:'Î',Ocirc:'Ô',Ucirc:'Û',
+  Atilde:'Ã',Otilde:'Õ',Ntilde:'Ñ',
+  Auml:'Ä',Euml:'Ë',Iuml:'Ï',Ouml:'Ö',Uuml:'Ü',
+  Ccedil:'Ç',szlig:'ß',
+  ndash:'–',mdash:'—',lsquo:'\u2018',rsquo:'\u2019',ldquo:'\u201C',rdquo:'\u201D',
+  bull:'•',hellip:'…',euro:'€',trade:'™',copy:'©',reg:'®',deg:'°',
+  iexcl:'¡',iquest:'¿',laquo:'«',raquo:'»',sect:'§',para:'¶',
+  times:'×',divide:'÷',permil:'‰',prime:'′',Prime:'″',
+  dagger:'†',Dagger:'‡',sbquo:'‚',bdquo:'„',
+};
+
+function decodeEntities(s: string): string {
+  return s.replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(+n))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
+    .replace(/&([a-zA-Z]+);/g, (_, n) => ENTITIES[n] || '&' + n + ';');
+}
+
+function cleanDesc(s: string): string {
+  return decodeEntities(s.replace(/<[^>]*>/g, '')).replace(/\s+/g, ' ').trim().substring(0, 200);
+}
+
 function cardHTML(item: NewsItem, i: number, featured: boolean) {
   const cat = { label: 'Brasil', color: '#c06000' };
   return `
@@ -61,7 +92,7 @@ try {
         const image = item.thumbnail || item.enclosure?.link || item.image || `https://picsum.photos/seed/${encodeURIComponent(title)}/600/400`;
         allItems.push({
           title,
-          description: (item.description || '').replace(/<[^>]*>/g, '').substring(0, 200),
+          description: cleanDesc(item.description || ''),
           url: item.link || item.url || source.homeUrl,
           image,
           published_at: item.pubDate || item.pub_date || new Date().toISOString(),
@@ -117,6 +148,10 @@ try {
   ];
   const RSS2JSON = 'https://api.rss2json.com/v1/api.json';
 
+  var _e={amp:'&',lt:'<',gt:'>',quot:'"',apos:"'",nbsp:'\xa0',aacute:'\xe1',eacute:'\xe9',iacute:'\xed',oacute:'\xf3',uacute:'\xfa',yacute:'\xfd',agrave:'\xe0',egrave:'\xe8',igrave:'\xec',ograve:'\xf2',ugrave:'\xf9',acirc:'\xe2',ecirc:'\xea',icirc:'\xee',ocirc:'\xf4',ucirc:'\xfb',atilde:'\xe3',otilde:'\xf5',ntilde:'\xf1',auml:'\xe4',euml:'\xeb',iuml:'\xef',ouml:'\xf6',uuml:'\xfc',yuml:'\xff',ccedil:'\xe7',Aacute:'\xc1',Eacute:'\xc9',Iacute:'\xcd',Oacute:'\xd3',Uacute:'\xda',Yacute:'\xdd',Agrave:'\xc0',Egrave:'\xc8',Igrave:'\xcc',Ograve:'\xd2',Ugrave:'\xd9',Acirc:'\xc2',Ecirc:'\xca',Icirc:'\xce',Ocirc:'\xd4',Ucirc:'\xdb',Atilde:'\xc3',Otilde:'\xd5',Ntilde:'\xd1',Auml:'\xc4',Euml:'\xcb',Iuml:'\xcf',Ouml:'\xd6',Uuml:'\xdc',Ccedil:'\xe7',szlig:'\xdf',ndash:'\u2013',mdash:'\u2014',lsquo:'\u2018',rsquo:'\u2019',ldquo:'\u201c',rdquo:'\u201d',bull:'\u2022',hellip:'\u2026',euro:'\u20ac',trade:'\u2122',copy:'\xa9',reg:'\xae',deg:'\xb0',laquo:'\xab',raquo:'\xbb',times:'\xd7',divide:'\xf7'};
+  function de(s){return s.replace(/&#(\d+);/g,function(_,n){return String.fromCodePoint(+n)}).replace(/&#x([\da-f]+);/gi,function(_,n){return String.fromCodePoint(parseInt(n,16))}).replace(/&([a-z]+);/gi,function(_,n){return _e[n]||'&'+n+';'})}
+  function cd(s){return de((s||'').replace(/<[^>]*>/g,'')).replace(/\s+/g,' ').trim().substring(0,200)}
+
   function ta(s) {
     var d = Math.floor((Date.now() - new Date(s).getTime()) / 1000);
     if (d < 60) return 'agora';
@@ -154,7 +189,7 @@ try {
           used[item.title] = 1;
           all.push({
             title: item.title,
-            description: (item.description || '').replace(/<[^>]*>/g, '').substring(0, 200),
+          description: cd(item.description),
             url: item.link || item.url || sources[si].home,
             image: item.thumbnail || item.enclosure?.link || item.image || 'https://picsum.photos/seed/' + encodeURIComponent(item.title) + '/600/400',
             published_at: item.pubDate || item.pub_date || new Date().toISOString(),
