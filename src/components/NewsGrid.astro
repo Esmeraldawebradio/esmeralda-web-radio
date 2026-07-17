@@ -1,22 +1,6 @@
 ---
 import { NEWS_SOURCES } from '../config.ts';
 
-const CAT: Record<string, { label: string; color: string }> = {
-  brazil: { label: 'Brasil', color: '#c06000' },
-  world: { label: 'Mundo', color: '#6000a0' },
-  economy: { label: 'Economia', color: '#2d7d46' },
-  politics: { label: 'Política', color: '#c04020' },
-  technology: { label: 'Tecnologia', color: '#1565c0' },
-  science: { label: 'Ciência', color: '#008080' },
-  health: { label: 'Saúde', color: '#c06000' },
-  sports: { label: 'Esportes', color: '#e0a000' },
-  entertainment: { label: 'Entretenimento', color: '#802000' },
-  culture: { label: 'Cultura', color: '#6000a0' },
-  climate: { label: 'Clima', color: '#4a8aff' },
-};
-
-function catInfo(c: string) { return CAT[c] || { label: c, color: '#555' }; }
-
 const RSS2JSON = 'https://api.rss2json.com/v1/api.json';
 
 interface NewsItem {
@@ -37,11 +21,10 @@ function timeAgo(s: string) {
   return Math.floor(diff / 86400) + 'd';
 }
 
-function cardHTML(item: NewsItem, i: number, isFeatured: boolean) {
-  const feat = isFeatured ? ' featured' : '';
+function cardHTML(item: NewsItem, i: number, featured: boolean) {
   const cat = { label: 'Brasil', color: '#c06000' };
   return `
-    <a href="${item.url}" class="news-card${feat} stagger-item" target="_blank" rel="noopener" style="--news-color:${cat.color};--i:${i}">
+    <a href="${item.url}" class="news-card${featured ? ' featured' : ''} stagger-item" target="_blank" rel="noopener" style="--news-color:${cat.color};--i:${i}">
       <div class="news-card-img">
         <img src="${item.image}" alt="${item.title.replace(/"/g, '&quot;')}" loading="lazy" onerror="this.parentElement.classList.add('news-card-img--empty')">
         <div class="news-card-img-overlay"></div>
@@ -56,66 +39,6 @@ function cardHTML(item: NewsItem, i: number, isFeatured: boolean) {
     </a>`;
 }
 
-const FALLBACK_ITEMS: Record<string, { title: string; description: string }[]> = {
-  'G1': [
-    { title: "Brasil registra avanço em indicadores econômicos", description: "Dados do Banco Central mostram recuperação consistente da atividade econômica em todas as regiões do país." },
-    { title: "Governo anuncia novo PAC para infraestrutura", description: "Programa de Aceleração do Crescimento prevê investimentos em rodovias, ferrovias e portos." },
-  ],
-  'UOL': [
-    { title: "Previsão do tempo: frente fria chega ao Sudeste", description: "Temperaturas devem cair a partir de quinta-feira com chegada de massa de ar polar." },
-    { title: "Câmbio: dólar fecha em queda com otimismo fiscal", description: "Moeda americana recua ante o real acompanhando cenário externo positivo." },
-  ],
-  'Folha': [
-    { title: "Câmara aprova texto-base da reforma tributária", description: "Proposta segue para o Senado com regime de urgência para votação ainda neste semestre." },
-  ],
-  'CNN Brasil': [
-    { title: "Entrevista: Ministro da Saúde detalha plano de vacinação", description: "Campanha nacional começa em agosto com foco em crianças e idosos." },
-  ],
-  'Estadão': [
-    { title: "Mercado projeta inflação menor para 2026", description: "Boletim Focus mostra redução nas expectativas para o IPCA deste ano." },
-  ],
-};
-
-function addFallbackItems(source: typeof NEWS_SOURCES[0], items: NewsItem[]) {
-  const fb = FALLBACK_ITEMS[source.name];
-  if (!fb) return;
-  fb.forEach((item, i) => {
-    items.push({
-      title: item.title,
-      description: item.description,
-      url: source.homeUrl,
-      image: `https://picsum.photos/seed/${source.name}${i}/600/400`,
-      published_at: new Date().toISOString(),
-      source: source.name,
-    });
-  });
-}
-
-function parseRSS(xml: string): NewsItem[] {
-  const items: NewsItem[] = [];
-  const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
-  let match;
-  while ((match = itemRegex.exec(xml)) !== null) {
-    const content = match[1];
-    const title = (content.match(/<title[^>]*>([^<]*)<\/title>/i) || [])[1] || '';
-    const link = (content.match(/<link[^>]*>([^<]*)<\/link>/i) || [])[1] || '';
-    const description = (content.match(/<description[^>]*>([^<]*)<\/description>/i) || [])[1] || '';
-    const pubDate = (content.match(/<pubDate[^>]*>([^<]*)<\/pubDate>/i) || [])[1] || '';
-    const imageMatch = content.match(/<enclosure[^>]*url="([^"]*)"[^>]*>/i);
-    const mediaMatch = content.match(/<media:content[^>]*url="([^"]*)"[^>]*>/i);
-    const image = (imageMatch || mediaMatch)?.[1] || '';
-    items.push({
-      title: title.replace(/<!\[CDATA\[([^\]]*)\]\]>/g, '$1'),
-      description: description.replace(/<[^>]*>/g, '').replace(/<!\[CDATA\[([^\]]*)\]\]>/g, '$1').substring(0, 200),
-      url: link,
-      image,
-      published_at: pubDate,
-      source: '',
-    });
-  }
-  return items;
-}
-
 let serverHTML = '';
 try {
   const allItems: NewsItem[] = [];
@@ -124,19 +47,13 @@ try {
   for (const source of NEWS_SOURCES) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
+      const timeout = setTimeout(() => controller.abort(), 5000);
       const url = `${RSS2JSON}?rss_url=${encodeURIComponent(source.feedUrl)}`;
       const res = await fetch(url, { signal: controller.signal });
       clearTimeout(timeout);
-      if (!res.ok) {
-        addFallbackItems(source, allItems);
-        continue;
-      }
+      if (!res.ok) continue;
       const data = await res.json();
-      if (data.status !== 'ok' || !data.items) {
-        addFallbackItems(source, allItems);
-        continue;
-      }
+      if (data.status !== 'ok' || !data.items) continue;
       for (const item of data.items) {
         const title = item.title || '';
         if (!title || usedTitles.has(title)) continue;
@@ -151,9 +68,7 @@ try {
           source: source.name,
         });
       }
-    } catch {
-      addFallbackItems(source, allItems);
-    }
+    } catch {}
   }
 
   allItems.sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
@@ -165,11 +80,7 @@ try {
     serverHTML = `<div class="news-grid">${cards.join('')}</div>
       <p class="news-footer">Fontes: ${sources}</p>`;
   }
-} catch (e) {
-  // fallback to client-side
-}
-
-
+} catch (e) {}
 ---
 
 <section id="noticias" class="section-padded section-surface" aria-labelledby="news-title">
@@ -183,37 +94,102 @@ try {
       {serverHTML ? (
         <Fragment set:html={serverHTML} />
       ) : (
-        <>
-          <div class="loading-root" aria-label="Carregando notícias...">
-            <div class="spinner"></div>
-            <span>Carregando notícias...</span>
-          </div>
-          <script is:inline>
-(function(){var r=document.getElementById('news-root');if(!r)return;
-var fbItems=[
-{title:"Brasil registra avanço em indicadores econômicos",description:"Dados do Banco Central mostram recuperação consistente da atividade econômica em todas as regiões do país.",src:"G1"},
-{title:"Câmara aprova texto-base da reforma tributária",description:"Proposta segue para o Senado com regime de urgência para votação ainda neste semestre.",src:"Folha"},
-{title:"Previsão do tempo: frente fria chega ao Sudeste",description:"Temperaturas devem cair a partir de quinta-feira com chegada de massa de ar polar.",src:"UOL"},
-{title:"Mercado projeta inflação menor para 2026",description:"Boletim Focus mostra redução nas expectativas para o IPCA deste ano.",src:"Estadão"},
-{title:"Entrevista: Ministro da Saúde detalha plano de vacinação",description:"Campanha nacional começa em agosto com foco em crianças e idosos.",src:"CNN Brasil"},
-{title:"Governo anuncia novo PAC para infraestrutura",description:"Programa de Aceleração do Crescimento prevê investimentos em rodovias, ferrovias e portos.",src:"G1"},
-];
-function ta(d){var s=Math.floor((Date.now()-new Date(d).getTime())/1e3);return s<60?'agora':s<3600?Math.floor(s/60)+'min':s<86400?Math.floor(s/3600)+'h':s<172800?'ontem':Math.floor(s/86400)+'d';}
-r.innerHTML='<div class="news-grid">'+fbItems.map(function(item,i){return '<a href="#" class="news-card stagger-item" target="_blank" rel="noopener" style="--news-color:#c06000;--i:'+i+'"><div class="news-card-img"><img src="https://picsum.photos/seed/n'+i+'/600/400" alt="" loading="lazy"><div class="news-card-img-overlay"></div><span class="news-card-badge">'+item.src+'</span></div><div class="news-card-body"><div class="news-card-meta"><span class="news-card-time">—</span><span class="news-card-source">'+item.src+'</span></div><h3 class="news-card-title">'+item.title+'</h3><p class="news-card-summary">'+item.description+'</p><span class="news-card-more">Ler matéria →</span></div></a>';}).join('')+'</div><p class="news-footer">Fontes: G1, UOL, Folha, CNN Brasil, Estadão</p>';})();
-          </script>
-        </>
+        <div class="loading-root" aria-label="Carregando notícias...">
+          <div class="spinner"></div>
+          <span>Carregando notícias...</span>
+        </div>
       )}
     </div>
   </div>
 </section>
 
+<script>
+(function() {
+  const r = document.getElementById('news-root');
+  if (!r) return;
+
+  const sources = [
+    {name:'G1',feed:'https://g1.globo.com/rss/g1/',home:'https://g1.globo.com'},
+    {name:'UOL',feed:'https://rss.uol.com.br/feed/noticias.xml',home:'https://noticias.uol.com.br'},
+    {name:'Folha',feed:'https://feeds.folha.uol.com.br/folha/emcimadahora/rss091.xml',home:'https://www.folha.uol.com.br'},
+    {name:'CNN Brasil',feed:'https://www.cnnbrasil.com.br/feed/',home:'https://www.cnnbrasil.com.br'},
+    {name:'Estadão',feed:'https://www.estadao.com.br/rss/',home:'https://www.estadao.com.br'},
+  ];
+  const RSS2JSON = 'https://api.rss2json.com/v1/api.json';
+
+  function ta(s) {
+    var d = Math.floor((Date.now() - new Date(s).getTime()) / 1000);
+    if (d < 60) return 'agora';
+    if (d < 3600) return Math.floor(d / 60) + 'min';
+    if (d < 86400) return Math.floor(d / 3600) + 'h';
+    if (d < 172800) return 'ontem';
+    return Math.floor(d / 86400) + 'd';
+  }
+
+  function ch(item, i, feat) {
+    return '<a href="' + item.url + '" class="news-card' + (feat ? ' featured' : '') + ' stagger-item" target="_blank" rel="noopener" style="--news-color:#c06000;--i:' + i + '"><div class="news-card-img"><img src="' + item.image + '" alt="" loading="lazy" onerror="this.parentElement.classList.add(\'news-card-img--empty\')"><div class="news-card-img-overlay"></div><span class="news-card-badge">' + item.source + '</span></div><div class="news-card-body"><div class="news-card-meta"><span class="news-card-time">' + ta(item.published_at) + '</span><span class="news-card-source">' + item.source + '</span></div><h3 class="news-card-title">' + item.title + '</h3><p class="news-card-summary">' + (item.description || '') + '</p><span class="news-card-more">Ler matéria →</span></div></a>';
+  }
+
+  var fb = [
+    {title:"Brasil registra avanço em indicadores econômicos",description:"Dados do Banco Central mostram recuperação consistente da atividade econômica.",url:"https://g1.globo.com",image:"https://picsum.photos/seed/g1f/600/400",published_at:new Date().toISOString(),source:"G1"},
+    {title:"Câmara aprova texto-base da reforma tributária",description:"Proposta segue para o Senado com regime de urgência.",url:"https://www.folha.uol.com.br",image:"https://picsum.photos/seed/folhaf/600/400",published_at:new Date().toISOString(),source:"Folha"},
+    {title:"Previsão do tempo: frente fria chega ao Sudeste",description:"Temperaturas devem cair com chegada de massa de ar polar.",url:"https://noticias.uol.com.br",image:"https://picsum.photos/seed/uolf/600/400",published_at:new Date().toISOString(),source:"UOL"},
+    {title:"Mercado projeta inflação menor para 2026",description:"Boletim Focus mostra redução nas expectativas para o IPCA.",url:"https://www.estadao.com.br",image:"https://picsum.photos/seed/estaof/600/400",published_at:new Date().toISOString(),source:"Estadão"},
+  ];
+
+  async function load() {
+    r.innerHTML = '<div class="loading-root"><div class="spinner"></div><span>Carregando notícias...</span></div>';
+    var all = [];
+    var used = {};
+
+    for (var si = 0; si < sources.length; si++) {
+      try {
+        var res = await fetch(RSS2JSON + '?rss_url=' + encodeURIComponent(sources[si].feed), {signal: AbortSignal.timeout(6000)});
+        if (!res.ok) continue;
+        var data = await res.json();
+        if (data.status !== 'ok' || !data.items) continue;
+        for (var j = 0; j < data.items.length; j++) {
+          var item = data.items[j];
+          if (!item.title || used[item.title]) continue;
+          used[item.title] = 1;
+          all.push({
+            title: item.title,
+            description: (item.description || '').replace(/<[^>]*>/g, '').substring(0, 200),
+            url: item.link || item.url || sources[si].home,
+            image: item.thumbnail || item.enclosure?.link || item.image || 'https://picsum.photos/seed/' + encodeURIComponent(item.title) + '/600/400',
+            published_at: item.pubDate || item.pub_date || new Date().toISOString(),
+            source: sources[si].name,
+          });
+        }
+      } catch(e) {}
+    }
+
+    all.sort(function(a,b) { return new Date(b.published_at).getTime() - new Date(a.published_at).getTime(); });
+    var items = all.slice(0, 6);
+    if (items.length === 0) items = fb;
+
+    var cards = '';
+    for (var k = 0; k < items.length; k++) {
+      cards += ch(items[k], k, k === 0);
+    }
+    var srcs = '';
+    for (var s = 0; s < sources.length; s++) {
+      if (s > 0) srcs += ', ';
+      srcs += sources[s].name;
+    }
+    r.innerHTML = '<div class="news-grid">' + cards + '</div><p class="news-footer">Fontes: ' + srcs + '</p>';
+  }
+
+  load();
+  setInterval(load, 300000);
+})();
+</script>
+
 <style is:global>
   .news-root { min-height: 200px; }
-
   .news-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
   @media (max-width: 768px) { .news-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 480px) { .news-grid { grid-template-columns: 1fr; } }
-
   .news-card {
     display: flex; flex-direction: column; overflow: hidden;
     text-decoration: none; color: inherit;
@@ -223,12 +199,10 @@ r.innerHTML='<div class="news-grid">'+fbItems.map(function(item,i){return '<a hr
   .news-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.12); text-decoration: none; }
   .news-card.featured { border-top-width: 4px; }
   .news-card.featured .news-card-title { font-size: var(--text-base); }
-
   .news-card-img { position: relative; width: 100%; height: 140px; overflow: hidden; background: var(--color-surface-elevated); }
   .news-card-img--empty { background: linear-gradient(135deg, var(--color-surface-elevated), var(--color-surface)); }
   .news-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform var(--duration-slow) var(--ease-out-quart); }
   .news-card:hover .news-card-img img { transform: scale(1.08); }
-
   .news-card-img-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.4)); pointer-events: none; }
   .news-card-badge {
     position: absolute; top: var(--space-3); left: var(--space-3);
@@ -237,18 +211,15 @@ r.innerHTML='<div class="news-grid">'+fbItems.map(function(item,i){return '<a hr
     text-transform: uppercase; letter-spacing: 0.05em;
     background: var(--news-color, var(--color-primary));
   }
-
   .news-card-body {
     padding: var(--space-3); flex: 1;
     display: flex; flex-direction: column; gap: var(--space-1);
     background: var(--color-surface-elevated);
   }
-
   .news-card-meta { display: flex; gap: var(--space-2); font-size: 10px; color: var(--color-ink-subtle); }
   .news-card-time, .news-card-source { display: inline-flex; align-items: center; }
   .news-card-time::after { content: '·'; margin-left: var(--space-2); opacity: 0.5; }
   .news-card-source { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
   .news-card-title {
     font-size: var(--text-sm); font-weight: var(--weight-bold);
     color: var(--color-ink); line-height: var(--leading-snug);
@@ -260,7 +231,6 @@ r.innerHTML='<div class="news-grid">'+fbItems.map(function(item,i){return '<a hr
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
   }
   .news-card-more { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--news-color, var(--color-primary)); margin-top: auto; }
-
   .news-footer { text-align: center; margin-top: var(--space-4); font-size: var(--text-xs); color: var(--color-ink-subtle); }
   .news-card.stagger-item { animation-delay: calc(var(--i, 0) * 60ms); }
 </style>
