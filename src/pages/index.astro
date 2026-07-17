@@ -81,8 +81,14 @@ import WeatherCard from '../components/WeatherCard.astro';
           const [eh, em] = endStr.split(':').map(Number);
           const start = sh * 60 + sm;
           const end = eh * 60 + em;
-          if (currentMinutes >= start && currentMinutes < end) {
-            currentCard = card;
+          if (start <= end) {
+            if (currentMinutes >= start && currentMinutes < end) {
+              currentCard = card;
+            }
+          } else {
+            if (currentMinutes >= start || currentMinutes < end) {
+              currentCard = card;
+            }
           }
         });
         if (currentCard) {

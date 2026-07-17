@@ -10,6 +10,20 @@ export const CONTACT = {
   email: "marlonsantiago.0002@gmail.com"
 };
 
+export interface NewsSource {
+  name: string;
+  feedUrl: string;
+  homeUrl: string;
+}
+
+export const NEWS_SOURCES: NewsSource[] = [
+  { name: 'G1',        feedUrl: 'https://g1.globo.com/rss/g1/',                        homeUrl: 'https://g1.globo.com' },
+  { name: 'UOL',       feedUrl: 'https://rss.uol.com.br/feed/noticias.xml',            homeUrl: 'https://noticias.uol.com.br' },
+  { name: 'Folha',     feedUrl: 'https://feeds.folha.uol.com.br/folha/emcimadahora/rss091.xml', homeUrl: 'https://www.folha.uol.com.br' },
+  { name: 'CNN Brasil',feedUrl: 'https://www.cnnbrasil.com.br/feed/',                  homeUrl: 'https://www.cnnbrasil.com.br' },
+  { name: 'Estadão',   feedUrl: 'https://www.estadao.com.br/rss/',                     homeUrl: 'https://www.estadao.com.br' },
+];
+
 export const SCHEDULE = [
   {
     time: "00:00 - 06:00",

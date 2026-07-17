@@ -579,10 +579,18 @@ const API_URL = STATION.apiUrl || '';
         const start = parseTime(startStr);
         const end = parseTime(endStr);
 
-        if (currentTime >= start && currentTime < end) {
-          if (programTitleEl) programTitleEl.textContent = item.program;
-          if (programTimeEl) programTimeEl.textContent = item.time;
-          break;
+        if (start <= end) {
+          if (currentTime >= start && currentTime < end) {
+            if (programTitleEl) programTitleEl.textContent = item.program;
+            if (programTimeEl) programTimeEl.textContent = item.time;
+            break;
+          }
+        } else {
+          if (currentTime >= start || currentTime < end) {
+            if (programTitleEl) programTitleEl.textContent = item.program;
+            if (programTimeEl) programTimeEl.textContent = item.time;
+            break;
+          }
         }
       }
     }

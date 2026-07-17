@@ -1,5 +1,5 @@
 ---
-import { buildCurrentWeather, buildHourlyForecast, buildDailyForecast, getWindDirection } from '../utils/weather';
+import { buildCurrentWeather, buildHourlyForecast, buildDailyForecast, getWindDirection, resolveHourIcon } from '../utils/weather';
 
 const LAT = -10.7428;
 const LON = -40.3628;
@@ -38,11 +38,13 @@ try {
     for (let i = 0; i < hourly.time.length; i++) {
       const hourDate = new Date(hourly.time[i]);
       if (hourDate.getDate() === now.getDate() && hourDate.getHours() >= currentHour && hourDate.getHours() < currentHour + 8) {
+        const hour = hourDate.getHours();
         hourlyForecast.push({
-          time: String(hourDate.getHours()).padStart(2, '0') + 'h',
+          time: String(hour).padStart(2, '0') + 'h',
           temperature: Math.round(hourly.temperature_2m[i]),
           rainChance: hourly.precipitation_probability[i] || 0,
           code: hourly.weathercode[i],
+          icon: resolveHourIcon(hourly.weathercode[i], hour),
         });
       }
     }

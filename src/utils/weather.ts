@@ -106,16 +106,25 @@ export function buildCurrentWeather(current: any, today: any) {
     </div>`;
 }
 
+export function resolveHourIcon(code: number, hour: number): string {
+  const weather = getWeather(code);
+  if (hour < 6 || hour >= 18) {
+    if (weather.icon === 'sun') return 'moon';
+    if (weather.icon === 'cloud-sun') return 'cloud-moon';
+  }
+  return weather.icon;
+}
+
 export function buildHourlyForecast(hourlyData: any[]) {
   if (!hourlyData.length) return '';
   return `
     <div class="weather-hourly-section">
       ${hourlyData.map(h => {
-        const weather = getWeather(h.code);
+        const icon = h.icon || resolveHourIcon(h.code, parseInt(h.time));
         return `
           <div class="weather-hourly-item">
             <span class="weather-hourly-item__time">${h.time}</span>
-            ${renderWeatherIcon(weather.icon)}
+            ${renderWeatherIcon(icon)}
             <span class="weather-hourly-item__temp">${h.temperature}°</span>
             <span class="weather-hourly-item__rain">${h.rainChance}%</span>
           </div>`;
