@@ -91,7 +91,7 @@ try {
         usedTitles.add(title);
         const image = item.thumbnail || item.enclosure?.link || item.image || `https://picsum.photos/seed/${encodeURIComponent(title)}/600/400`;
         allItems.push({
-          title,
+          title: cleanDesc(title),
           description: cleanDesc(item.description || ''),
           url: item.link || item.url || source.homeUrl,
           image,
@@ -148,9 +148,12 @@ try {
   ];
   const RSS2JSON = 'https://api.rss2json.com/v1/api.json';
 
-  var _e={amp:'&',lt:'<',gt:'>',quot:'"',apos:"'",nbsp:'\xa0',aacute:'\xe1',eacute:'\xe9',iacute:'\xed',oacute:'\xf3',uacute:'\xfa',yacute:'\xfd',agrave:'\xe0',egrave:'\xe8',igrave:'\xec',ograve:'\xf2',ugrave:'\xf9',acirc:'\xe2',ecirc:'\xea',icirc:'\xee',ocirc:'\xf4',ucirc:'\xfb',atilde:'\xe3',otilde:'\xf5',ntilde:'\xf1',auml:'\xe4',euml:'\xeb',iuml:'\xef',ouml:'\xf6',uuml:'\xfc',yuml:'\xff',ccedil:'\xe7',Aacute:'\xc1',Eacute:'\xc9',Iacute:'\xcd',Oacute:'\xd3',Uacute:'\xda',Yacute:'\xdd',Agrave:'\xc0',Egrave:'\xc8',Igrave:'\xcc',Ograve:'\xd2',Ugrave:'\xd9',Acirc:'\xc2',Ecirc:'\xca',Icirc:'\xce',Ocirc:'\xd4',Ucirc:'\xdb',Atilde:'\xc3',Otilde:'\xd5',Ntilde:'\xd1',Auml:'\xc4',Euml:'\xcb',Iuml:'\xcf',Ouml:'\xd6',Uuml:'\xdc',Ccedil:'\xe7',szlig:'\xdf',ndash:'\u2013',mdash:'\u2014',lsquo:'\u2018',rsquo:'\u2019',ldquo:'\u201c',rdquo:'\u201d',bull:'\u2022',hellip:'\u2026',euro:'\u20ac',trade:'\u2122',copy:'\xa9',reg:'\xae',deg:'\xb0',laquo:'\xab',raquo:'\xbb',times:'\xd7',divide:'\xf7'};
-  function de(s){return s.replace(/&#(\d+);/g,function(_,n){return String.fromCodePoint(+n)}).replace(/&#x([\da-f]+);/gi,function(_,n){return String.fromCodePoint(parseInt(n,16))}).replace(/&([a-z]+);/gi,function(_,n){return _e[n]||'&'+n+';'})}
-  function cd(s){return de((s||'').replace(/<[^>]*>/g,'')).replace(/\s+/g,' ').trim().substring(0,200)}
+  function tx(s){
+    var d=document.createElement('div');
+    d.innerHTML=s||'';
+    return d.textContent;
+  }
+  function cd(s){return tx(s).replace(/\s+/g,' ').trim().substring(0,200)}
 
   function ta(s) {
     var d = Math.floor((Date.now() - new Date(s).getTime()) / 1000);
@@ -161,8 +164,9 @@ try {
     return Math.floor(d / 86400) + 'd';
   }
 
+  function h(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
   function ch(item, i, feat) {
-    return '<a href="' + item.url + '" class="news-card' + (feat ? ' featured' : '') + ' stagger-item" target="_blank" rel="noopener" style="--news-color:#c06000;--i:' + i + '"><div class="news-card-img"><img src="' + item.image + '" alt="" loading="lazy" onerror="this.parentElement.classList.add(\'news-card-img--empty\')"><div class="news-card-img-overlay"></div><span class="news-card-badge">' + item.source + '</span></div><div class="news-card-body"><div class="news-card-meta"><span class="news-card-time">' + ta(item.published_at) + '</span><span class="news-card-source">' + item.source + '</span></div><h3 class="news-card-title">' + item.title + '</h3><p class="news-card-summary">' + (item.description || '') + '</p><span class="news-card-more">Ler matéria →</span></div></a>';
+    return '<a href="' + h(item.url) + '" class="news-card' + (feat ? ' featured' : '') + ' stagger-item" target="_blank" rel="noopener" style="--news-color:#c06000;--i:' + i + '"><div class="news-card-img"><img src="' + h(item.image) + '" alt="' + h(item.title) + '" loading="lazy" onerror="this.parentElement.classList.add(\'news-card-img--empty\')"><div class="news-card-img-overlay"></div><span class="news-card-badge">' + h(item.source) + '</span></div><div class="news-card-body"><div class="news-card-meta"><span class="news-card-time">' + ta(item.published_at) + '</span><span class="news-card-source">' + h(item.source) + '</span></div><h3 class="news-card-title">' + tx(item.title) + '</h3><p class="news-card-summary">' + (item.description || '') + '</p><span class="news-card-more">Ler matéria →</span></div></a>';
   }
 
   var fb = [
