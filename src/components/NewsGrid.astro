@@ -56,43 +56,39 @@ function cardHTML(item: NewsItem, i: number, isFeatured: boolean) {
     </a>`;
 }
 
-function fallbackHTML(sourceName: string): string {
-  const items: Record<string, { title: string; description: string }[]> = {
-    'G1': [
-      { title: "Brasil registra avanço em indicadores econômicos", description: "Dados do Banco Central mostram recuperação consistente da atividade econômica em todas as regiões do país." },
-      { title: "Governo anuncia novo PAC para infraestrutura", description: "Programa de Aceleração do Crescimento prevê investimentos em rodovias, ferrovias e portos." },
-    ],
-    'UOL': [
-      { title: "Previsão do tempo: frente fria chega ao Sudeste", description: "Temperaturas devem cair a partir de quinta-feira com chegada de massa de ar polar." },
-      { title: "Câmbio: dólar fecha em queda com otimismo fiscal", description: "Moeda americana recua ante o real acompanhando cenário externo positivo." },
-    ],
-    'Folha': [
-      { title: "Câmara aprova texto-base da reforma tributária", description: "Proposta segue para o Senado com regime de urgência para votação ainda neste semestre." },
-    ],
-    'CNN Brasil': [
-      { title: "Entrevista: Ministro da Saúde detalha plano de vacinação", description: "Campanha nacional começa em agosto com foco em crianças e idosos." },
-    ],
-    'Estadão': [
-      { title: "Mercado projeta inflação menor para 2026", description: "Boletim Focus mostra redução nas expectativas para o IPCA deste ano." },
-    ],
-  };
-  const srcFallback = items[sourceName];
-  if (!srcFallback) return '';
-  return srcFallback.map((item, i) => {
-    return `
-      <a href="#" class="news-card stagger-item" style="--news-color:#c06000;--i:${i}">
-        <div class="news-card-img">
-          <img src="https://picsum.photos/seed/${sourceName}${i}/600/400" alt="" loading="lazy">
-          <div class="news-card-img-overlay"></div>
-          <span class="news-card-badge">${sourceName}</span>
-        </div>
-        <div class="news-card-body">
-          <div class="news-card-meta"><span class="news-card-time">—</span><span class="news-card-source">${sourceName}</span></div>
-          <h3 class="news-card-title">${item.title}</h3>
-          <p class="news-card-summary">${item.description}</p>
-        </div>
-      </a>`;
-  }).join('');
+const FALLBACK_ITEMS: Record<string, { title: string; description: string }[]> = {
+  'G1': [
+    { title: "Brasil registra avanço em indicadores econômicos", description: "Dados do Banco Central mostram recuperação consistente da atividade econômica em todas as regiões do país." },
+    { title: "Governo anuncia novo PAC para infraestrutura", description: "Programa de Aceleração do Crescimento prevê investimentos em rodovias, ferrovias e portos." },
+  ],
+  'UOL': [
+    { title: "Previsão do tempo: frente fria chega ao Sudeste", description: "Temperaturas devem cair a partir de quinta-feira com chegada de massa de ar polar." },
+    { title: "Câmbio: dólar fecha em queda com otimismo fiscal", description: "Moeda americana recua ante o real acompanhando cenário externo positivo." },
+  ],
+  'Folha': [
+    { title: "Câmara aprova texto-base da reforma tributária", description: "Proposta segue para o Senado com regime de urgência para votação ainda neste semestre." },
+  ],
+  'CNN Brasil': [
+    { title: "Entrevista: Ministro da Saúde detalha plano de vacinação", description: "Campanha nacional começa em agosto com foco em crianças e idosos." },
+  ],
+  'Estadão': [
+    { title: "Mercado projeta inflação menor para 2026", description: "Boletim Focus mostra redução nas expectativas para o IPCA deste ano." },
+  ],
+};
+
+function addFallbackItems(source: typeof NEWS_SOURCES[0], items: NewsItem[]) {
+  const fb = FALLBACK_ITEMS[source.name];
+  if (!fb) return;
+  fb.forEach((item, i) => {
+    items.push({
+      title: item.title,
+      description: item.description,
+      url: source.homeUrl,
+      image: `https://picsum.photos/seed/${source.name}${i}/600/400`,
+      published_at: new Date().toISOString(),
+      source: source.name,
+    });
+  });
 }
 
 function parseRSS(xml: string): NewsItem[] {
@@ -133,32 +129,12 @@ try {
       const res = await fetch(url, { signal: controller.signal });
       clearTimeout(timeout);
       if (!res.ok) {
-        const fallback = fallbackHTML(source.name);
-        if (fallback) {
-          const fbItems: NewsItem[] = [];
-          const div = document.createElement('div');
-          div.innerHTML = fallback;
-          div.querySelectorAll('.news-card').forEach((el, i) => {
-            fbItems.push({
-              title: (el.querySelector('.news-card-title')?.textContent || ''),
-              description: (el.querySelector('.news-card-summary')?.textContent || ''),
-              url: '#',
-              image: `https://picsum.photos/seed/${source.name}${i}/600/400`,
-              published_at: new Date().toISOString(),
-              source: source.name,
-            });
-          });
-          allItems.push(...fbItems);
-        }
+        addFallbackItems(source, allItems);
         continue;
       }
       const data = await res.json();
       if (data.status !== 'ok' || !data.items) {
-        const fallback = fallbackHTML(source.name);
-        if (fallback) {
-          const fbItems = parseFallbackHTML(fallback, source.name);
-          allItems.push(...fbItems);
-        }
+        addFallbackItems(source, allItems);
         continue;
       }
       for (const item of data.items) {
@@ -169,18 +145,14 @@ try {
         allItems.push({
           title,
           description: (item.description || '').replace(/<[^>]*>/g, '').substring(0, 200),
-          url: item.link || item.url || '#',
+          url: item.link || item.url || source.homeUrl,
           image,
           published_at: item.pubDate || item.pub_date || new Date().toISOString(),
           source: source.name,
         });
       }
     } catch {
-      const fallback = fallbackHTML(source.name);
-      if (fallback) {
-        const fbItems = parseFallbackHTML(fallback, source.name);
-        allItems.push(...fbItems);
-      }
+      addFallbackItems(source, allItems);
     }
   }
 
@@ -197,27 +169,7 @@ try {
   // fallback to client-side
 }
 
-function parseFallbackHTML(html: string, sourceName: string): NewsItem[] {
-  const items: NewsItem[] = [];
-  const cardRegex = /<a[^>]*class="news-card[^"]*"[^>]*>([\s\S]*?)<\/a>/g;
-  let match;
-  let idx = 0;
-  while ((match = cardRegex.exec(html)) !== null) {
-    const content = match[1];
-    const title = (content.match(/<h3[^>]*class="news-card-title"[^>]*>([^<]*)<\/h3>/i) || [])[1] || '';
-    const desc = (content.match(/<p[^>]*class="news-card-summary"[^>]*>([^<]*)<\/p>/i) || [])[1] || '';
-    items.push({
-      title,
-      description: desc,
-      url: '#',
-      image: `https://picsum.photos/seed/${sourceName}${idx}/600/400`,
-      published_at: new Date().toISOString(),
-      source: sourceName,
-    });
-    idx++;
-  }
-  return items;
-}
+
 ---
 
 <section id="noticias" class="section-padded section-surface" aria-labelledby="news-title">
