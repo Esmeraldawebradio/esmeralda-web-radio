@@ -12,34 +12,57 @@ export const CONTACT = {
 
 export const SCHEDULE = [
   {
-    time: "06:00 - 12:00",
-    program: "Forró & Piseiro - Manhã",
-    presenter: "Marlon Santiago",
+    time: "00:00 - 06:00",
+    program: "Programação Musical",
     days: "Todos os dias",
-    description: "Forró raiz, piseiro e pisadinha pra animar sua manhã"
+    description: "Seleção variada de ritmos pra embalar a madrugada"
   },
   {
-    time: "12:00 - 18:00",
-    program: "Arrocha & Sertanejo - Tarde",
+    time: "06:00 - 08:00",
+    program: "Bom Dia Esmeralda",
     days: "Todos os dias",
-    description: "Arrocha romântico e sertanejo pra curtir a tarde"
+    description: "Forró raiz e pé-de-serra pra começar o dia com alegria"
   },
   {
-    time: "18:00 - 22:00",
-    program: "Seresta & MPB - Noite",
+    time: "08:00 - 10:00",
+    program: "Sertanejo Universitário",
     days: "Todos os dias",
-    description: "Seresta, MPB e música romântica pra relaxar a noite"
-  },
-  {
-    time: "22:00 - 06:00",
-    program: "Sertanejo & Vaquejada - Madrugada",
-    days: "Todos os dias",
-    description: "Sertanejo, vaquejada e forró pra madrugada"
+    description: "O melhor do sertanejo universitário e modão"
   },
   {
     time: "10:00 - 12:00",
-    program: "São João & Baião",
-    days: "Sáb e Dom",
-    description: "Músicas de São João, baião e forró antigo"
+    program: "Piseiro & Pisadinha",
+    days: "Todos os dias",
+    description: "Piseiro, pisadinha e forró estilizado"
+  },
+  {
+    time: "12:00 - 14:00",
+    program: "Brega & Seresta",
+    days: "Todos os dias",
+    description: "Brega romântico e seresta das antigas"
+  },
+  {
+    time: "14:00 - 18:00",
+    program: "Tarde Musical",
+    days: "Todos os dias",
+    description: "Mistura de ritmos pra alegrar sua tarde"
+  },
+  {
+    time: "18:00 - 20:00",
+    program: "Forró & Vaquejada",
+    days: "Todos os dias",
+    description: "Forró, vaquejada e baião pra esquentar a noite"
+  },
+  {
+    time: "20:00 - 22:00",
+    program: "Modão Sertanejo",
+    days: "Todos os dias",
+    description: "Sertanejo raiz e modão de viola"
+  },
+  {
+    time: "22:00 - 00:00",
+    program: "Brega Night",
+    days: "Todos os dias",
+    description: "Brega, seresta e românticas pra fechar a noite"
   }
 ];
