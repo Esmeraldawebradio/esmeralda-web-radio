@@ -42,17 +42,17 @@ async function fetchOgImage(url: string): Promise<string | null> {
 
 function cardHTML(item: any, i: number, isFeatured: boolean, imgSrc: string) {
   const cat = catInfo(item.categories?.[0] || 'brazil');
-  const outlets = item.outlets?.map((o: any) => o.name).join(', ') || 'Daily Journal';
+    const outlet = item.outlets?.[0]?.name || item.source?.name || 'Daily Journal';
   const feat = isFeatured ? ' featured' : '';
   return `
     <a href="${item.url}" class="news-card${feat} stagger-item" target="_blank" rel="noopener" style="--news-color:${cat.color};--i:${i}">
       <div class="news-card-img">
         <img src="${imgSrc}" alt="${item.title}" loading="lazy">
         <div class="news-card-img-overlay"></div>
-        <span class="news-card-badge">${cat.label}</span>
+        <span class="news-card-badge">${outlet}</span>
       </div>
       <div class="news-card-body">
-        <div class="news-card-meta"><span class="news-card-time">${timeAgo(item.published_at)}</span><span class="news-card-source">${outlets}</span></div>
+        <div class="news-card-meta"><span class="news-card-time">${timeAgo(item.published_at)}</span><span class="news-card-source">${outlet}</span></div>
         <h3 class="news-card-title">${item.title}</h3>
         <p class="news-card-summary">${item.description}</p>
         <span class="news-card-more">Ler matéria →</span>
@@ -62,12 +62,12 @@ function cardHTML(item: any, i: number, isFeatured: boolean, imgSrc: string) {
 
 function fallbackHTML() {
   const items = [
-    { title: "Brasil registra avanço em indicadores econômicos", description: "Dados do Banco Central mostram recuperação consistente da atividade econômica em todas as regiões do país.", cat: "economy" },
-    { title: "Cúpula do clima reúne líderes de 50 países em Brasília", description: "Encontro debate metas de redução de carbono e financiamento para energias renováveis.", cat: "world" },
-    { title: "Tecnologia brasileira ganha destaque em feira internacional", description: "Startups do país apresentam soluções inovadoras em inteligência artificial e agronegócio.", cat: "technology" },
-    { title: "Novo programa de saúde amplia atendimento no SUS", description: "Ministério da Saúde anuncia investimento recorde na atenção primária para comunidades rurais.", cat: "health" },
-    { title: "Festival de cinema nacional bate recorde de público", description: "Mostra de filmes brasileiros atrai milhares de espectadores e impulsiona o cinema nacional.", cat: "culture" },
-    { title: "Campeonato nacional tem rodada decisiva", description: "Clássicos regionais agitam a tabela e definem os primeiros classificados para a fase final.", cat: "sports" },
+    { title: "Brasil registra avanço em indicadores econômicos", description: "Dados do Banco Central mostram recuperação consistente da atividade econômica em todas as regiões do país.", cat: "economy", src: "G1" },
+    { title: "Cúpula do clima reúne líderes de 50 países em Brasília", description: "Encontro debate metas de redução de carbono e financiamento para energias renováveis.", cat: "world", src: "BBC News" },
+    { title: "Tecnologia brasileira ganha destaque em feira internacional", description: "Startups do país apresentam soluções inovadoras em inteligência artificial e agronegócio.", cat: "technology", src: "Folha de S.Paulo" },
+    { title: "Novo programa de saúde amplia atendimento no SUS", description: "Ministério da Saúde anuncia investimento recorde na atenção primária para comunidades rurais.", cat: "health", src: "UOL" },
+    { title: "Festival de cinema nacional bate recorde de público", description: "Mostra de filmes brasileiros atrai milhares de espectadores e impulsiona o cinema nacional.", cat: "culture", src: "CNN Brasil" },
+    { title: "Campeonato nacional tem rodada decisiva", description: "Clássicos regionais agitam a tabela e definem os primeiros classificados para a fase final.", cat: "sports", src: "ESPN" },
   ];
   return items.map((item, i) => {
     const cat = catInfo(item.cat);
@@ -76,10 +76,10 @@ function fallbackHTML() {
         <div class="news-card-img">
           <img src="https://picsum.photos/seed/fb${i}/600/400" alt="" loading="lazy">
           <div class="news-card-img-overlay"></div>
-          <span class="news-card-badge">${cat.label}</span>
+          <span class="news-card-badge">${item.src}</span>
         </div>
         <div class="news-card-body">
-          <div class="news-card-meta"><span class="news-card-time">—</span></div>
+          <div class="news-card-meta"><span class="news-card-time">—</span><span class="news-card-source">${item.src}</span></div>
           <h3 class="news-card-title">${item.title}</h3>
           <p class="news-card-summary">${item.description}</p>
         </div>
@@ -128,8 +128,8 @@ try {
 const CAT={brazil:{label:'Brasil',color:'#c06000'},world:{label:'Mundo',color:'#6000a0'},economy:{label:'Economia',color:'#2d7d46'},politics:{label:'Política',color:'#c04020'},technology:{label:'Tecnologia',color:'#1565c0'},science:{label:'Ciência',color:'#008080'},health:{label:'Saúde',color:'#c06000'},sports:{label:'Esportes',color:'#e0a000'},entertainment:{label:'Entretenimento',color:'#802000'},culture:{label:'Cultura',color:'#6000a0'},climate:{label:'Clima',color:'#4a8aff'}};
 function ci(c){return CAT[c]||{label:c,color:'#555'};}
 function ta(s){const d=Math.floor((Date.now()-new Date(s).getTime())/1e3);return d<60?'agora':d<3600?Math.floor(d/60)+'min':d<86400?Math.floor(d/3600)+'h':d<172800?'ontem':Math.floor(d/86400)+'d';}
-function ch(item,i,feat){const c=ci(item.categories?.[0]||'brazil'),o=item.outlets?.map(o=>o.name).join(', ')||'Daily Journal',src='https://picsum.photos/seed/'+(item.slug||'n'+i)+'/600/400',f=feat?' featured':'';return '<a href="'+item.url+'" class="news-card'+f+' stagger-item" target="_blank" rel="noopener" style="--news-color:'+c.color+';--i:'+i+'"><div class="news-card-img"><img src="'+src+'" alt="'+item.title+'" loading="lazy"><div class="news-card-img-overlay"></div><span class="news-card-badge">'+c.label+'</span></div><div class="news-card-body"><div class="news-card-meta"><span class="news-card-time">'+ta(item.published_at)+'</span><span class="news-card-source">'+o+'</span></div><h3 class="news-card-title">'+item.title+'</h3><p class="news-card-summary">'+item.description+'</p><span class="news-card-more">Ler matéria →</span></div></a>';}
-function fb(){const items=[{title:"Brasil registra avanço em indicadores econômicos",description:"Dados do Banco Central mostram recuperação consistente da atividade econômica em todas as regiões do país.",cat:"economy"},{title:"Cúpula do clima reúne líderes de 50 países em Brasília",description:"Encontro debate metas de redução de carbono e financiamento para energias renováveis.",cat:"world"},{title:"Tecnologia brasileira ganha destaque em feira internacional",description:"Startups do país apresentam soluções inovadoras em inteligência artificial e agronegócio.",cat:"technology"},{title:"Novo programa de saúde amplia atendimento no SUS",description:"Ministério da Saúde anuncia investimento recorde na atenção primária para comunidades rurais.",cat:"health"},{title:"Festival de cinema nacional bate recorde de público",description:"Mostra de filmes brasileiros atrai milhares de espectadores e impulsiona o cinema nacional.",cat:"culture"},{title:"Campeonato nacional tem rodada decisiva",description:"Clássicos regionais agitam a tabela e definem os primeiros classificados para a fase final.",cat:"sports"}];return items.map((item,i)=>{const c=ci(item.cat);return '<a href="#" class="news-card stagger-item" style="--news-color:'+c.color+';--i:'+i+'"><div class="news-card-img"><img src="https://picsum.photos/seed/fb'+i+'/600/400" alt="" loading="lazy"><div class="news-card-img-overlay"></div><span class="news-card-badge">'+c.label+'</span></div><div class="news-card-body"><div class="news-card-meta"><span class="news-card-time">—</span></div><h3 class="news-card-title">'+item.title+'</h3><p class="news-card-summary">'+item.description+'</p></div></a>';}).join('');}
+function ch(item,i,feat){const c=ci(item.categories?.[0]||'brazil'),o=item.outlets?.[0]?.name||item.source?.name||'Daily Journal',src=item.image_url||'https://picsum.photos/seed/'+(item.slug||'n'+i)+'/600/400',f=feat?' featured':'';return '<a href="'+item.url+'" class="news-card'+f+' stagger-item" target="_blank" rel="noopener" style="--news-color:'+c.color+';--i:'+i+'"><div class="news-card-img"><img src="'+src+'" alt="'+item.title+'" loading="lazy"><div class="news-card-img-overlay"></div><span class="news-card-badge">'+o+'</span></div><div class="news-card-body"><div class="news-card-meta"><span class="news-card-time">'+ta(item.published_at)+'</span><span class="news-card-source">'+o+'</span></div><h3 class="news-card-title">'+item.title+'</h3><p class="news-card-summary">'+item.description+'</p><span class="news-card-more">Ler matéria →</span></div></a>';}
+function fb(){const items=[{title:"Brasil registra avanço em indicadores econômicos",description:"Dados do Banco Central mostram recuperação consistente da atividade econômica em todas as regiões do país.",cat:"economy",src:"G1"},{title:"Cúpula do clima reúne líderes de 50 países em Brasília",description:"Encontro debate metas de redução de carbono e financiamento para energias renováveis.",cat:"world",src:"BBC News"},{title:"Tecnologia brasileira ganha destaque em feira internacional",description:"Startups do país apresentam soluções inovadoras em inteligência artificial e agronegócio.",cat:"technology",src:"Folha de S.Paulo"},{title:"Novo programa de saúde amplia atendimento no SUS",description:"Ministério da Saúde anuncia investimento recorde na atenção primária para comunidades rurais.",cat:"health",src:"UOL"},{title:"Festival de cinema nacional bate recorde de público",description:"Mostra de filmes brasileiros atrai milhares de espectadores e impulsiona o cinema nacional.",cat:"culture",src:"CNN Brasil"},{title:"Campeonato nacional tem rodada decisiva",description:"Clássicos regionais agitam a tabela e definem os primeiros classificados para a fase final.",cat:"sports",src:"ESPN"}];return items.map((item,i)=>{const c=ci(item.cat);return '<a href="#" class="news-card stagger-item" style="--news-color:'+c.color+';--i:'+i+'"><div class="news-card-img"><img src="https://picsum.photos/seed/fb'+i+'/600/400" alt="" loading="lazy"><div class="news-card-img-overlay"></div><span class="news-card-badge">'+item.src+'</span></div><div class="news-card-body"><div class="news-card-meta"><span class="news-card-time">—</span><span class="news-card-source">'+item.src+'</span></div><h3 class="news-card-title">'+item.title+'</h3><p class="news-card-summary">'+item.description+'</p></div></a>';}).join('');}
 async function load(){try{const p=await fetch('https://dailyjournal.news/api/public/news?limit=6');if(!p.ok)throw Error();const j=await p.json(),items=j.items||[];r.innerHTML='<div class="news-grid">'+items.map((item,i)=>ch(item,i,i===0)).join('')+'</div><p class="news-footer">Agregado por Daily Journal · G1, Folha, UOL, CNN Brasil e mais</p>';}catch(e){r.innerHTML='<div class="news-grid">'+fb()+'</div>';}}
 load();})();
           </script>
