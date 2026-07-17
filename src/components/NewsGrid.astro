@@ -48,8 +48,20 @@ function decodeEntities(s: string): string {
     .replace(/&([a-zA-Z]+);/g, (_, n) => ENTITIES[n] || '&' + n + ';');
 }
 
+function normalizeText(s: string): string {
+  return s
+    .replace(/[\u201C\u201D\u201E\u00AB\u00BB]/g, '"')
+    .replace(/[\u2018\u2019\u201A]/g, "'")
+    .replace(/\u2013/g, '-')
+    .replace(/\u2014/g, '-')
+    .replace(/\u2026/g, '...')
+    .replace(/[\u2032\u2033]/g, "'")
+    .replace(/\u2022/g, '-')
+    .replace(/[\uD800-\uDFFF]/g, '');
+}
+
 function cleanDesc(s: string): string {
-  return decodeEntities(s.replace(/<[^>]*>/g, '')).replace(/\s+/g, ' ').trim().substring(0, 200);
+  return normalizeText(decodeEntities(s.replace(/<[^>]*>/g, ''))).replace(/\s+/g, ' ').trim().substring(0, 200);
 }
 
 function cardHTML(item: NewsItem, i: number, featured: boolean) {
@@ -148,10 +160,13 @@ try {
   ];
   const RSS2JSON = 'https://api.rss2json.com/v1/api.json';
 
+  function n(s){
+    return s.replace(/[\u201C\u201D\u201E\u00AB\u00BB]/g,'"').replace(/[\u2018\u2019\u201A]/g,"'").replace(/\u2013/g,'-').replace(/\u2014/g,'-').replace(/\u2026/g,'...').replace(/[\u2032\u2033]/g,"'").replace(/\u2022/g,'-').replace(/[\uD800-\uDFFF]/g,'');
+  }
   function tx(s){
     var d=document.createElement('div');
     d.innerHTML=s||'';
-    return d.textContent;
+    return n(d.textContent);
   }
   function cd(s){return tx(s).replace(/\s+/g,' ').trim().substring(0,200)}
 
